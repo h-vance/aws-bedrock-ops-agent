@@ -1,13 +1,16 @@
-# AWS Bedrock Agent
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=2,5,10&height=120&section=header&text=AWS%20BEDROCK%20AGENT&fontSize=30&animation=fadeIn&fontAlignY=35" width="100%"/>
+</p>
 
-A robust infrastructure and application framework for deploying automated assistants using Amazon Bedrock. This repository provides the Terraform configurations for AWS Lambda integration and a Python-based execution logic for interacting with large language models.
+<p align="center">
+  <img src="https://img.shields.io/badge/Case_Study-Autonomous_AI_Infra_Orchestration-BB9AF7?style=for-the-badge&logo=dev.to&logoColor=white" height="35">
+</p>
 
-[![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white)](https://aws.amazon.com/)
-[![Terraform](https://img.shields.io/badge/terraform-%235835CC.svg?style=for-the-badge&logo=terraform&logoColor=white)](https://www.terraform.io/)
-[![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)](https://www.python.org/)
-[![Boto3](https://img.shields.io/badge/Boto3-orange?style=for-the-badge)](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)
-[![GitHub Actions](https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/features/actions)
+<p align="center">
+  <em>Autonomous AI orchestration layer for automated cloud infrastructure troubleshooting and management.</em>
+</p>
 
+<br/>
 ## Features
 
 - **Infrastructure as Code**: Full Terraform deployment for IAM roles, Lambda functions, and policy management.
