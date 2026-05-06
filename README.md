@@ -1,4 +1,17 @@
 <p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customGradient=ff4d6d,ff8c42,4c1130&height=250&section=header&text=aws-bedrock-agent%20|%20Harrison%20Vance&fontSize=60&animation=fadeIn&fontColor=fff" />
+</p>
+
+<p align="center">
+  <em>Autonomous AI orchestration layer for automated cloud infrastructure troubleshooting and management.</em>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform&logoColor=white" height="28">&nbsp;&nbsp;<img src="https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazonaws&logoColor=white" height="28">&nbsp;&nbsp;<img src="https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white" height="28">&nbsp;&nbsp;<img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" height="28">&nbsp;&nbsp;<img src="https://img.shields.io/badge/Bash-4EAA25?style=for-the-badge&logo=gnubash&logoColor=white" height="28">
+</p>
+
+---
+<p align="center">
   <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=2,5,10&height=120&section=header&text=AWS%20BEDROCK%20AGENT&fontSize=30&animation=fadeIn&fontAlignY=35" width="100%"/>
 </p>
 
