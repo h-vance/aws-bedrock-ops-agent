@@ -11,7 +11,6 @@ env/
 .terraform/
 *.tfstate
 *.tfstate.backup
-.terraform.lock.hcl
 
 # AWS / Lambda
 assistant.zip
