@@ -1,22 +1,40 @@
 <p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customGradient=ff4d6d,ff8c42,4c1130&height=250&section=header&text=aws-bedrock-agent%20|%20Harrison%20Vance&fontSize=60&animation=fadeIn&fontColor=fff" />
+  <img src="https://capsule-render.vercel.app/api?type=rect&color=09090b&height=200&section=header&text=HARRISON%20VANCE&fontSize=70&fontAlignY=40&animation=fadeIn&fontColor=10b981&desc=INFRASTRUCTURE%20ENGINEERING%20&%20SYSTEMS%20ARCHITECTURE&descSize=20&descAlignY=65&descAlign=50" />
 </p>
+
+<p align="center">
+  <code>[ STATUS: ACTIVE ]</code> &nbsp;&nbsp; <code>[ LOCATION: APAC/REMOTE ]</code> &nbsp;&nbsp; <code>[ SYNCED: 2026.05.03 ]</code>
+</p>
+
+<h1 align='center'>Aws Bedrock Agent</h1>
 
 <p align="center">
   <em>Autonomous AI orchestration layer for automated cloud infrastructure troubleshooting and management.</em>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazonaws&logoColor=white" height="28">&nbsp;&nbsp;<img src="https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform&logoColor=white" height="28">&nbsp;&nbsp;<img src="https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white" height="28">&nbsp;&nbsp;<img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" height="28">&nbsp;&nbsp;<img src="https://img.shields.io/badge/Bash-4EAA25?style=for-the-badge&logo=gnubash&logoColor=white" height="28">
+  <img src="https://img.shields.io/badge/AWS-18181b?style=for-the-badge&logo=amazon&logoColor=10b981" height="28">&nbsp;&nbsp;<img src="https://img.shields.io/badge/Terraform-18181b?style=for-the-badge&logo=terraform&logoColor=10b981" height="28">&nbsp;&nbsp;<img src="https://img.shields.io/badge/Go-18181b?style=for-the-badge&logo=go&logoColor=10b981" height="28">&nbsp;&nbsp;<img src="https://img.shields.io/badge/Python-18181b?style=for-the-badge&logo=python&logoColor=10b981" height="28">&nbsp;&nbsp;<img src="https://img.shields.io/badge/Bash-18181b?style=for-the-badge&logo=gnubash&logoColor=10b981" height="28">
 </p>
 
 ---
 
 
 
-<p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=2,5,10&height=120&section=header&text=AWS%20BEDROCK%20AGENT&fontSize=30&animation=fadeIn&fontAlignY=35" width="100%"/>
-</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <p align="center">
   <img src="https://img.shields.io/badge/Case_Study-Autonomous_AI_Infra_Orchestration-BB9AF7?style=for-the-badge&logo=dev.to&logoColor=white" height="35">
