@@ -12,6 +12,7 @@
 
 ---
 
+
 <p align="center">
   <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=2,5,10&height=120&section=header&text=AWS%20BEDROCK%20AGENT&fontSize=30&animation=fadeIn&fontAlignY=35" width="100%"/>
 </p>
