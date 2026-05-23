@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" fill="none">
+  <rect width="1200" height="300" fill="#09090b"/>
+  
+  <!-- Tactical Grid -->
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#10b981" stroke-width="0.5" stroke-opacity="0.05"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="300" fill="url(#grid)"/>
+  
+  <!-- Glass Border -->
+  <rect x="10" y="10" width="1180" height="280" rx="4" stroke="#10b981" stroke-opacity="0.1" stroke-width="1"/>
+  
+  <!-- Corner Brackets -->
+  <path d="M 30 60 L 30 30 L 60 30" stroke="#10b981" stroke-width="2" stroke-opacity="0.4" fill="none"/>
+  <path d="M 1140 30 L 1170 30 L 1170 60" stroke="#10b981" stroke-width="2" stroke-opacity="0.4" fill="none"/>
+  <path d="M 30 240 L 30 270 L 60 270" stroke="#10b981" stroke-width="2" stroke-opacity="0.4" fill="none"/>
+  <path d="M 1140 270 L 1170 270 L 1170 240" stroke="#10b981" stroke-width="2" stroke-opacity="0.4" fill="none"/>
+  
+  <!-- Main Text -->
+  <text x="50%" y="45%" dominant-baseline="middle" text-anchor="middle" fill="#f4f4f5" font-family="Inter, system-ui, sans-serif" font-size="72" font-weight="900" letter-spacing="4" text-transform="uppercase">
+    HARRISON VANCE
+  </text>
+  
+  <text x="50%" y="65%" dominant-baseline="middle" text-anchor="middle" fill="#10b981" font-family="JetBrains Mono, monospace" font-size="24" font-weight="500" letter-spacing="8">
+    Cloud Engineering &amp; DevOps
+  </text>
+</svg>
