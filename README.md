@@ -1,100 +1,133 @@
-<p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=rect&color=09090b&height=200&section=header&text=HARRISON%20VANCE&fontSize=70&fontAlignY=40&animation=fadeIn&fontColor=10b981&desc=INFRASTRUCTURE%20ENGINEERING%20&%20SYSTEMS%20ARCHITECTURE&descSize=20&descAlignY=65&descAlign=50" />
-</p>
+# AWS Bedrock Agent
 
-<p align="center">
-  <code>[ STATUS: ACTIVE ]</code> &nbsp;&nbsp; <code>[ LOCATION: APAC/REMOTE ]</code> &nbsp;&nbsp; <code>[ SYNCED: 2026.05.03 ]</code>
-</p>
+[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen?logo=render)](https://triage-copilot.onrender.com)
+[![Deploy to Render](https://img.shields.io/badge/deploy%20to-render-%2346E3B7)](https://render.com/deploy)
 
-<h1 align='center'>Aws Bedrock Agent</h1>
+> **L2 triage copilot for support engineers: ingests incident evidence bundles and returns hypotheses, checks, and escalation-ready notes — not a general chat assistant.**
 
-<p align="center">
-  <em>Autonomous AI orchestration layer for automated cloud infrastructure troubleshooting and management.</em>
-</p>
+Part of the [Ops Support Demo](https://github.com/h-vance/ops-support-demo) portfolio.
 
-<p align="center">
-  <img src="https://img.shields.io/badge/AWS-18181b?style=for-the-badge&logo=amazon&logoColor=10b981" height="28">&nbsp;&nbsp;<img src="https://img.shields.io/badge/Terraform-18181b?style=for-the-badge&logo=terraform&logoColor=10b981" height="28">&nbsp;&nbsp;<img src="https://img.shields.io/badge/Go-18181b?style=for-the-badge&logo=go&logoColor=10b981" height="28">&nbsp;&nbsp;<img src="https://img.shields.io/badge/Python-18181b?style=for-the-badge&logo=python&logoColor=10b981" height="28">&nbsp;&nbsp;<img src="https://img.shields.io/badge/Bash-18181b?style=for-the-badge&logo=gnubash&logoColor=10b981" height="28">
-</p>
+## Overview
 
----
+A structured triage copilot that consumes incident evidence from [api-failure-analysis](https://github.com/h-vance/api-failure-analysis) and returns ranked hypotheses, recommended checks, and escalation documentation. Designed for support engineers who need AI assistance grounded in actual incident data — not open-ended conversation.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Case_Study-Autonomous_AI_Infra_Orchestration-BB9AF7?style=for-the-badge&logo=dev.to&logoColor=white" height="35">
-</p>
-
-<p align="center">
-  <em>Autonomous AI orchestration layer for automated cloud infrastructure troubleshooting and management.</em>
-</p>
-
-<br/>
 ## Features
 
-- **Infrastructure as Code**: Full Terraform deployment for IAM roles, Lambda functions, and policy management.
-- **Serverless Execution**: Optimized Python 3.12 runtime for AWS Lambda.
-- **Model Integration**: Direct interface with Amazon Bedrock using the Boto3 SDK.
-- **Dual-Mode Operation**: Supports both serverless Lambda execution and local command-line interface testing.
+- **Structured Triage:** `POST /triage` accepts an incident evidence bundle; returns JSON with hypotheses, checks, and escalation readiness.
+- **Mock Mode:** `BEDROCK_MOCK=true` returns deterministic canned responses — works offline with no AWS credentials.
+- **AWS Lambda Ready:** Deploy as a Lambda function via Terraform for production use.
+- **Dual-Mode Operation:** Local FastAPI server for development and demo; Lambda handler for deployment.
 
-## Repository Structure
+## Quickstart
 
-- `assistant.py`: Core logic for model interaction and handler for AWS Lambda.
-- `main.tf`: Terraform configuration for AWS resource provisioning.
-- `.gitignore`: Standard exclusions for Python and Terraform environments.
+```bash
+# Start with mock mode (no AWS needed)
+BEDROCK_MOCK=true python assistant.py --api
+
+# Or via docker-compose in the meta-repo
+cd ../ops-support-demo && make demo
+```
+
+## API
+
+### POST /triage
+
+**Request** — incident evidence bundle (same schema as api-failure-analysis evidence-bundle):
+
+```json
+{
+  "incident_id": "INC-001",
+  "summary": "Auth cascade after token rotation",
+  "timeline": [
+    { "ts": "2025-01-15T10:00:00Z", "event": "...", "trace_id": "tx-001" }
+  ],
+  "log_lines": [
+    { "level": "error", "message": "...", "trace_id": "tx-001" }
+  ],
+  "request_samples": [
+    { "method": "GET", "path": "/api/v1/data", "status": 403 }
+  ],
+  "related_endpoints": ["/login", "/api/v1/data"]
+}
+```
+
+**Response** — structured triage output:
+
+```json
+{
+  "incident_id": "INC-001",
+  "hypotheses": [
+    {
+      "rank": 1,
+      "hypothesis": "Token rotation invalidated active sessions without grace period",
+      "confidence": "high",
+      "evidence_ids": ["tx-001"],
+      "check_command": "curl -s -H 'Authorization: Bearer <old_token>' http://localhost:8000/api/v1/data"
+    }
+  ],
+  "recommended_checks": [
+    "Verify token expiry on /login response",
+    "Check if /api/v1/data accepts the new token format"
+  ],
+  "escalation_ready": true,
+  "customer_comms_draft": "We identified an authentication failure caused by a token rotation that invalidated active sessions. Engineering is reviewing the rollout sequence."
+}
+```
+
+## Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `BEDROCK_MOCK` | `true` | Use canned responses (no AWS) or call Bedrock |
+| `LAB_BASE_URL` | `http://failure-lab:8000` | Used in `/health` response to indicate connected lab |
+
+Note: CORS is pre-configured to accept requests from `http://localhost:8080` and `http://127.0.0.1:8080` (the debug console). For production, update `allow_origins` in `assistant.py`.
+
+## Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health` | Returns `status`, `mode` (mock/live), and `lab_url` |
+| POST | `/triage` | Accepts evidence bundle; returns hypotheses, checks, escalation notes |
 
 ## Deployment
 
-### Prerequisites
-
-- AWS CLI configured with appropriate credentials.
-- Terraform installed locally.
-- Python 3.12 environment.
-
-### Infrastructure Provisioning
-
-1. Initialize Terraform:
-   ```bash
-   terraform init
-   ```
-
-2. Review the plan:
-   ```bash
-   terraform plan
-   ```
-
-3. Deploy the resources:
-   ```bash
-   terraform apply
-   ```
-
-## Local Testing
-
-The assistant can be tested locally using the Python CLI:
-
+### Live Demo (Render)
 ```bash
-python assistant.py
+curl https://triage-copilot.onrender.com/health
+curl -X POST https://triage-copilot.onrender.com/triage \
+  -H "Content-Type: application/json" \
+  -d '{"incident_id":"INC-001","summary":"Auth cascade after token rotation","timeline":[],"log_lines":[],"request_samples":[],"related_endpoints":[]}'
 ```
+
+The live demo runs on Render's free tier with `BEDROCK_MOCK=true`. No AWS credentials needed.
+
+### Local (Mock)
+```bash
+BEDROCK_MOCK=true python assistant.py --api
+```
+
+### AWS Lambda
+```bash
+# Deploys assistant.lambda_handler with 30s timeout + bedrock:InvokeModel IAM
+terraform init && terraform apply
+```
+
+The Terraform config (`main.tf`) zips `assistant.py`, creates a Lambda function with `assistant.lambda_handler` as entry point, 30-second timeout, and a least-privilege IAM role scoped to `bedrock:InvokeModel`. Set `BEDROCK_MOCK=false` and `LAB_BASE_URL` in the Lambda environment variables for production use.
+
+## CORS
+
+Both APIs include pre-configured `CORSMiddleware` allowing `http://localhost:8080` and `http://127.0.0.1:8080` (the debug console). Update `allow_origins` when deploying under a custom domain.
 
 ## Security
 
-This project follows the Principle of Least Privilege (PoLP) by restricting IAM roles to specific Bedrock invocation actions. Ensure that the `bedrock_agent_role` is monitored and audited regularly within your AWS environment.
+Follows Principle of Least Privilege — IAM role is scoped to `bedrock:InvokeModel` only.
+
+## Related
+
+- [api-failure-analysis](https://github.com/h-vance/api-failure-analysis) — evidence engine that feeds incident bundles
+- [ops-support-demo](https://github.com/h-vance/ops-support-demo) — umbrella docker-compose demo
 
 ## License
 
-MIT License. See LICENSE for details.
+MIT

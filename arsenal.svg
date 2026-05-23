@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="20" fill="none">
+  <defs>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  
+  <style>
+    .badge-bg { fill: #09090b; stroke: #10b981; stroke-opacity: 0.1; }
+    .badge-label { fill: #10b981; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: bold; }
+    .badge-value { fill: #f4f4f5; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+    .accent-line { fill: #10b981; }
+  </style>
+
+  <g transform="translate(10, 10)">
+  </g>
+</svg>

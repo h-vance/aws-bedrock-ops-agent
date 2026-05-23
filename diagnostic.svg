@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="300" fill="none">
+  <rect width="1000" height="300" rx="8" fill="#09090b"/>
+  <rect x="2" y="2" width="996" height="296" rx="6" stroke="#10b981" stroke-opacity="0.1" stroke-width="1"/>
+  
+  <!-- Diagnostic Grid -->
+  <defs>
+    <pattern id="diagGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#10b981" stroke-width="0.5" stroke-opacity="0.03"/>
+    </pattern>
+  </defs>
+  <rect width="1000" height="300" rx="8" fill="url(#diagGrid)"/>
+
+  <!-- Scanning Line Glow -->
+  <rect width="1000" height="2" fill="#10b981" fill-opacity="0.05">
+    <animate attributeName="y" from="0" to="300" dur="8s" repeatCount="indefinite" />
+  </rect>
+
+  <!-- Labels & Values -->
+  <g font-family="JetBrains Mono, monospace" font-size="14">
+    <g transform="translate(40, 60)">
+      <text fill="#10b981" font-weight="bold">[ █ ENGINEER   ]</text>
+      <text x="180" fill="#f4f4f5">Harrison Vance</text>
+      <text x="960" text-anchor="end" fill="#10b981" font-size="10">[ OK ]</text>
+    </g>
+    <g transform="translate(40, 100)">
+      <text fill="#10b981" font-weight="bold">[ █ FOCUS      ]</text>
+      <text x="180" fill="#f4f4f5">Distributed Systems // High-Performance APIs</text>
+      <text x="960" text-anchor="end" fill="#10b981" font-size="10">[ ACTIVE ]</text>
+    </g>
+    <g transform="translate(40, 140)">
+      <text fill="#10b981" font-weight="bold">[ █ INFRA      ]</text>
+      <text x="180" fill="#f4f4f5">AWS // Kubernetes // Terraform</text>
+      <text x="960" text-anchor="end" fill="#10b981" font-size="10">[ SECURE ]</text>
+    </g>
+    <g transform="translate(40, 180)">
+      <text fill="#10b981" font-weight="bold">[ █ DOMAIN     ]</text>
+      <text x="180" fill="#f4f4f5">Cloud Native Architecture // SRE</text>
+      <text x="960" text-anchor="end" fill="#10b981" font-size="10">[ OPTIMAL ]</text>
+    </g>
+    <g transform="translate(40, 220)">
+      <text fill="#10b981" font-weight="bold">[ █ FOOTPRINT  ]</text>
+      <text x="180" fill="#f4f4f5">10+ Year Verified Infrastructure Ledger</text>
+      <text x="960" text-anchor="end" fill="#10b981" font-size="10">[ VERIFIED ]</text>
+    </g>
+  </g>
+
+  <!-- Corner Brackets -->
+  <path d="M 20 40 L 20 20 L 40 20" stroke="#10b981" stroke-width="2" stroke-opacity="0.3" fill="none"/>
+  <path d="M 960 20 L 980 20 L 980 40" stroke="#10b981" stroke-width="2" stroke-opacity="0.3" fill="none"/>
+  <path d="M 20 260 L 20 280 L 40 280" stroke="#10b981" stroke-width="2" stroke-opacity="0.3" fill="none"/>
+  <path d="M 960 280 L 980 280 L 980 260" stroke="#10b981" stroke-width="2" stroke-opacity="0.3" fill="none"/>
+</svg>
