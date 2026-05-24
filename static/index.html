@@ -50,15 +50,17 @@
 
   /* Main content */
   .main { flex: 1; overflow-y: auto; padding: 0; }
+
+  /* Empty state / intro */
   .empty-state {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     height: 100%; color: #484f58; text-align: center; padding: 40px;
   }
-  .empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
   .empty-state h2 { font-size: 18px; color: #6e7681; margin-bottom: 8px; }
-  .empty-state p { font-size: 13px; line-height: 1.6; max-width: 400px; }
+  .empty-state p { font-size: 13px; line-height: 1.6; max-width: 520px; margin-bottom: 16px; }
   .empty-state .shortcut { display: inline-block; background: #161b22; border: 1px solid #30363d; border-radius: 4px; padding: 2px 8px; font-size: 11px; margin: 0 2px; }
 
+  /* Detail */
   .detail { padding: 24px; display: none; }
   .detail.active { display: block; }
 
@@ -66,6 +68,15 @@
   .detail-header .id { font-size: 12px; color: #ff9900; font-weight: 600; }
   .detail-header h2 { font-size: 20px; margin: 4px 0; font-weight: 600; }
   .detail-header .summary { font-size: 13px; color: #8b949e; line-height: 1.5; }
+
+  /* Tabs */
+  .detail-tabs { display: flex; gap: 0; border-bottom: 1px solid #1e2328; margin-bottom: 20px; }
+  .detail-tab {
+    font-size: 12px; padding: 8px 20px; cursor: pointer; color: #6e7681;
+    border-bottom: 2px solid transparent; user-select: none;
+  }
+  .detail-tab:hover { color: #c9d1d9; }
+  .detail-tab.active { color: #c9d1d9; border-bottom-color: #ff9900; }
 
   .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #6e7681; margin-bottom: 12px; margin-top: 24px; }
   .section-title:first-of-type { margin-top: 0; }
@@ -99,10 +110,64 @@
   }
   .escalation-box .copy-btn:hover { background: #1c2128; }
 
+  /* Loading */
+  .loading { display: flex; align-items: center; gap: 8px; color: #6e7681; font-size: 13px; padding: 40px; justify-content: center; }
   .spinner { width: 16px; height: 16px; border: 2px solid #30363d; border-top-color: #ff9900; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
-  .tab.active { color: #c9d1d9; border-bottom-color: #ff9900; }
+  /* Error */
+  .error-state { text-align: center; padding: 40px; }
+  .error-state .icon { font-size: 32px; margin-bottom: 12px; opacity: 0.5; }
+  .error-state p { font-size: 13px; color: #f85149; margin-bottom: 12px; }
+  .error-state button {
+    font-size: 12px; padding: 6px 16px; border-radius: 6px;
+    border: 1px solid #30363d; background: #161b22; color: #c9d1d9; cursor: pointer;
+  }
+  .error-state button:hover { background: #1c2128; }
 
+  /* Timeline */
+  .timeline { position: relative; padding: 4px 0 4px 20px; }
+  .timeline::before {
+    content: ''; position: absolute; left: 8px; top: 0; bottom: 0;
+    width: 2px; background: #1e2328;
+  }
+  .timeline-event { position: relative; padding: 8px 0 8px 24px; }
+  .timeline-dot {
+    position: absolute; left: -12px; top: 12px; width: 10px; height: 10px;
+    border-radius: 50%; background: #30363d; border: 2px solid #1e2328; z-index: 1;
+  }
+  .timeline-dot.error { background: #f85149; }
+  .timeline-dot.warn { background: #d29922; }
+  .timeline-dot.ok { background: #3fb950; }
+  .timeline-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .timeline-ts { font-size: 11px; color: #6e7681; font-family: monospace; white-space: nowrap; }
+  .timeline-text { font-size: 13px; color: #c9d1d9; }
+  .timeline-trace {
+    font-size: 10px; padding: 1px 6px; border-radius: 4px;
+    background: #161b22; border: 1px solid #30363d; color: #8b949e; font-family: monospace;
+  }
+
+  /* Evidence panel */
+  .evidence-section { margin-top: 20px; }
+  .evidence-section:first-child { margin-top: 0; }
+
+  .log-entry {
+    font-size: 12px; font-family: monospace; padding: 6px 10px; margin-bottom: 4px;
+    border-radius: 4px; border-left: 3px solid; background: #0d1013;
+  }
+  .log-entry.ERROR { border-color: #f85149; color: #f85149; }
+  .log-entry.WARNING { border-color: #d29922; color: #d29922; }
+  .log-entry.INFO { border-color: #58a6ff; color: #8b949e; }
+
+  .sample-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .sample-table th { text-align: left; padding: 6px 10px; color: #6e7681; border-bottom: 1px solid #1e2328; font-weight: 500; }
+  .sample-table td { padding: 6px 10px; border-bottom: 1px solid #1e2328; color: #c9d1d9; }
+  .status-2xx { color: #3fb950; } .status-4xx { color: #d29922; } .status-5xx { color: #f85149; }
+
+  .endpoint-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .endpoint-tag { font-size: 11px; padding: 3px 10px; border-radius: 100px; background: #161b22; border: 1px solid #30363d; color: #8b949e; font-family: monospace; }
+
+  .api-response { margin-top: 24px; }
   .api-response summary { cursor: pointer; font-size: 12px; color: #ff9900; padding: 8px 0; }
   .api-response pre { font-size: 11px; background: #040608; border: 1px solid #1e2328; border-radius: 6px; padding: 14px; overflow-x: auto; max-height: 300px; }
 
@@ -138,7 +203,7 @@
     <div class="empty-state" id="empty-state">
       <div style="font-size:32px;margin-bottom:16px;opacity:0.6;font-weight:300;letter-spacing:2px">[ ops ]</div>
       <h2>AWS Bedrock Ops Agent</h2>
-      <p style="max-width:520px;margin-bottom:16px">
+      <p>
         A structured L2 triage copilot for support engineers. Ingest incident evidence and get ranked hypotheses,
         recommended checks, and escalation-ready customer communications — grounded in data, not general chat.
       </p>
@@ -159,7 +224,7 @@
 
 <script>
 const INCIDENTS = [
-  { id: "INC-001", summary: "Auth cascade after token rotation", pattern: "auth", severity: "high", 
+  { id: "INC-001", summary: "Auth cascade after token rotation", pattern: "auth", severity: "high",
     desc: "Missing Bearer token triggers 401, retry with stale token yields 403 across downstream services" },
   { id: "INC-002", summary: "Webhook signature validation failure", pattern: "webhook", severity: "mid",
     desc: "Partner POSTs order.shipped events without HMAC-SHA256 signature header" },
@@ -167,49 +232,98 @@ const INCIDENTS = [
     desc: "Client times out at 30s while server continues processing for 45s+ across multiple endpoints" }
 ];
 
-const MOCK = {
+const EVIDENCE = {
   "auth": {
-    "hypotheses": [
-      { "rank": 1, "hypothesis": "Token rotation invalidated active sessions without a grace period", "confidence": "high", "evidence_ids": ["tx-001", "tx-003"], "check_command": "curl -s -H 'Authorization: Bearer valid-token-xyz' http://localhost:8000/api/v1/data" },
-      { "rank": 2, "hypothesis": "Client cached stale token after rotation event", "confidence": "medium", "evidence_ids": ["tx-003"], "check_command": "curl -s -X POST http://localhost:8000/login -H 'Content-Type: application/json' -d '{\"username\":\"admin\",\"password\":\"password123\"}'" }
+    "incident_id": "INC-001",
+    "summary": "Auth cascade after token rotation — missing Bearer token triggers 401, retry with stale token yields 403 across downstream services",
+    "timeline": [
+      {"ts": "2025-01-15T09:58:00Z", "event": "Scheduled token rotation deployed", "trace_id": "n/a"},
+      {"ts": "2025-01-15T09:59:00Z", "event": "Client A active session invalidated", "trace_id": "tx-001"},
+      {"ts": "2025-01-15T09:59:02Z", "event": "GET /api/v1/data — no Authorization header (401)", "trace_id": "tx-001"},
+      {"ts": "2025-01-15T09:59:05Z", "event": "POST /login with cached credentials — success, new token issued", "trace_id": "tx-002"},
+      {"ts": "2025-01-15T09:59:08Z", "event": "GET /api/v1/data with new token (200)", "trace_id": "tx-002"},
+      {"ts": "2025-01-15T09:59:10Z", "event": "Client B retries with old token (403)", "trace_id": "tx-003"},
+      {"ts": "2025-01-15T09:59:15Z", "event": "Client C receives 401, retries 4 times, rate-limited", "trace_id": "tx-004"}
     ],
-    "recommended_checks": [
-      "Verify token expiry in /login response",
-      "Check if /api/v1/data accepts the new token format",
-      "Inspect retry logic in client C — 4 retries suggests no backoff"
+    "log_lines": [
+      {"level": "WARNING", "message": "Data request: missing Authorization header", "trace_id": "tx-001"},
+      {"level": "WARNING", "message": "Data request: invalid token 'old-toke...'", "trace_id": "tx-003"},
+      {"level": "INFO", "message": "Data request: authorized", "trace_id": "tx-002"},
+      {"level": "WARNING", "message": "Login failed: wrong password for 'admin'", "trace_id": "tx-001"},
+      {"level": "ERROR", "message": "Client C rate-limited after 4 retries", "trace_id": "tx-004"}
     ],
-    "escalation_ready": true,
-    "customer_comms_draft": "We identified an authentication failure caused by a token rotation that invalidated active sessions. Engineering is reviewing the rollout sequence to add a grace period."
+    "request_samples": [
+      {"method": "GET", "path": "/api/v1/data", "status": 401},
+      {"method": "POST", "path": "/login", "status": 401},
+      {"method": "GET", "path": "/api/v1/data", "status": 403},
+      {"method": "POST", "path": "/login", "status": 200},
+      {"method": "GET", "path": "/api/v1/data", "status": 200}
+    ],
+    "related_endpoints": ["/login", "/api/v1/data", "/api/v1/resource/{id}"]
   },
   "webhook": {
-    "hypotheses": [
-      { "rank": 1, "hypothesis": "Partner sent webhook without HMAC-SHA256 signature header", "confidence": "high", "evidence_ids": ["tx-wh-001"], "check_command": "curl -s -X POST http://localhost:8000/webhooks/inbound -H 'Content-Type: application/json' -d '{\"event\":\"test\"}'" },
-      { "rank": 2, "hypothesis": "Partner webhook secret was rotated without updating our integration", "confidence": "medium", "evidence_ids": ["tx-wh-001", "tx-wh-003"], "check_command": "curl -s http://localhost:8000/webhooks/inbox | python3 -c 'import sys,json; [print(d[\"status\"]) for d in json.load(sys.stdin)[\"deliveries\"]]'" }
+    "incident_id": "INC-002",
+    "summary": "Webhook signature validation failure — partner POSTs order.shipped event with incorrect HMAC-SHA256 signature",
+    "timeline": [
+      {"ts": "2025-02-10T14:30:00Z", "event": "Partner 'AcmeCorp' sends order.shipped webhook", "trace_id": "tx-wh-001"},
+      {"ts": "2025-02-10T14:30:01Z", "event": "Webhook received: X-Signature header missing", "trace_id": "tx-wh-001"},
+      {"ts": "2025-02-10T14:30:02Z", "event": "Signature validation: FAILED — expected sha256 HMAC", "trace_id": "tx-wh-001"},
+      {"ts": "2025-02-10T14:30:03Z", "event": "Webhook rejected, 400 returned to partner", "trace_id": "tx-wh-001"},
+      {"ts": "2025-02-10T14:31:00Z", "event": "Partner retries with hash instead of HMAC — fails again", "trace_id": "tx-wh-002"},
+      {"ts": "2025-02-10T14:35:00Z", "event": "On-call paged: 'webhook delivery failing for AcmeCorp'", "trace_id": "n/a"}
     ],
-    "recommended_checks": [
-      "Verify partner's webhook secret matches our records",
-      "Check if partner updated their webhook endpoint recently",
-      "Review webhook documentation shared with partner"
+    "log_lines": [
+      {"level": "WARNING", "message": "Webhook rejected: bad signature (got='none')", "trace_id": "tx-wh-001"},
+      {"level": "WARNING", "message": "Webhook rejected: bad signature (got='sha256=plain-hash')", "trace_id": "tx-wh-002"},
+      {"level": "INFO", "message": "Webhook accepted: event=order.shipped", "trace_id": "tx-wh-003"}
     ],
-    "escalation_ready": false,
-    "customer_comms_draft": "We detected webhook delivery failures due to a signature mismatch. Please verify your webhook signing secret matches the one provided in your integration settings."
+    "request_samples": [
+      {"method": "POST", "path": "/webhooks/inbound", "status": 400},
+      {"method": "POST", "path": "/webhooks/inbound", "status": 400},
+      {"method": "POST", "path": "/webhooks/inbound", "status": 200}
+    ],
+    "related_endpoints": ["/webhooks/inbound", "/webhooks/inbox"]
   },
   "timeout": {
-    "hypotheses": [
-      { "rank": 1, "hypothesis": "Client-side timeout (30s) is shorter than upstream processing time (45s+)", "confidence": "high", "evidence_ids": ["tx-to-001", "tx-to-002"], "check_command": "curl -s --max-time 60 http://localhost:8000/api/v1/external-call" },
-      { "rank": 2, "hypothesis": "No circuit breaker — every request hits upstream even when degraded", "confidence": "medium", "evidence_ids": ["tx-to-002", "tx-to-003"], "check_command": "for i in $(seq 1 5); do curl -s -o /dev/null -w \"%{http_code} %{time_total}\\n\" --max-time 10 http://localhost:8000/api/v1/external-call; done" }
+    "incident_id": "INC-003",
+    "summary": "Upstream API timeout — client times out at 30s while server continues processing for 45s, causing orphaned state",
+    "timeline": [
+      {"ts": "2025-03-05T22:15:00Z", "event": "Client A calls GET /api/v1/external-call", "trace_id": "tx-to-001"},
+      {"ts": "2025-03-05T22:15:05Z", "event": "Server accepts request, begins upstream processing", "trace_id": "tx-to-001"},
+      {"ts": "2025-03-05T22:15:35Z", "event": "Client A hits 30s timeout, closes connection", "trace_id": "tx-to-001"},
+      {"ts": "2025-03-05T22:15:50Z", "event": "Server finishes processing (45s), cannot write to closed connection", "trace_id": "tx-to-001"},
+      {"ts": "2025-03-05T22:15:51Z", "event": "Server logs 'client disconnected (broken pipe)'", "trace_id": "tx-to-001"},
+      {"ts": "2025-03-05T22:16:00Z", "event": "Client B same request — also times out", "trace_id": "tx-to-002"}
     ],
-    "recommended_checks": [
-      "Compare client timeout config vs upstream SLA",
-      "Check if upstream retry-on-timeout is idempotent",
-      "Evaluate adding async callback pattern instead of synchronous wait"
+    "log_lines": [
+      {"level": "WARNING", "message": "External call: simulating 15s upstream delay", "trace_id": "tx-to-001"},
+      {"level": "INFO", "message": "GET /api/v1/external-call -> 200 (15000ms)", "trace_id": "tx-to-001"},
+      {"level": "WARNING", "message": "External call: simulating 15s upstream delay", "trace_id": "tx-to-002"}
     ],
-    "escalation_ready": true,
-    "customer_comms_draft": "An upstream API timeout occurred because the client timeout (30s) is shorter than the server processing time. We are reviewing timeout configurations and considering async patterns."
+    "request_samples": [
+      {"method": "GET", "path": "/api/v1/external-call", "status": 200},
+      {"method": "GET", "path": "/api/v1/external-call", "status": 200}
+    ],
+    "related_endpoints": ["/api/v1/external-call", "/health"]
   }
 };
 
 let activeId = null;
+let activeTab = "triage";
+let triageCache = {};
+
+function dotClass(event) {
+  const e = event.toLowerCase();
+  if (e.includes("fail") || e.includes("error") || e.includes("reject") || e.includes("timeout") || e.includes("broken") || e.includes("401") || e.includes("403") || e.includes("400")) return "error";
+  if (e.includes("warn") || e.includes("retry") || e.includes("rate-lim")) return "warn";
+  return "ok";
+}
+
+function statusClass(status) {
+  if (status >= 200 && status < 300) return "status-2xx";
+  if (status >= 400 && status < 500) return "status-4xx";
+  return "status-5xx";
+}
 
 function renderSidebar() {
   const list = document.getElementById("incident-list");
@@ -223,25 +337,78 @@ function renderSidebar() {
   `).join("");
 }
 
-function selectIncident(id) {
-  activeId = id;
-  renderSidebar();
-  const inc = INCIDENTS.find(i => i.id === id);
-  const data = MOCK[inc.pattern];
-  renderDetail(inc, data);
+function escapeHtml(str) {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-function renderDetail(inc, data) {
-  const el = document.getElementById("detail-view");
-  const jsonBlob = JSON.stringify({ incident_id: inc.id, ...data }, null, 2);
+function formatTs(ts) {
+  const d = new Date(ts);
+  return d.toLocaleTimeString("en-US", {hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit"});
+}
 
-  el.innerHTML = `
-    <div class="detail-header">
-      <div class="id">${inc.id} / ${inc.pattern}</div>
-      <h2>${inc.summary}</h2>
-      <div class="summary">${inc.desc}</div>
+function renderTimeline(timeline) {
+  if (!timeline || timeline.length === 0) return "<p style='color:#6e7681;font-size:13px'>No timeline data</p>";
+  return `<div class="timeline">${timeline.map(t => `
+    <div class="timeline-event">
+      <div class="timeline-dot ${dotClass(t.event)}"></div>
+      <div class="timeline-top">
+        <span class="timeline-ts">${formatTs(t.ts)}</span>
+        <span class="timeline-text">${escapeHtml(t.event)}</span>
+        ${t.trace_id && t.trace_id !== "n/a" ? `<span class="timeline-trace">${t.trace_id}</span>` : ""}
+      </div>
     </div>
+  `).join("")}</div>`;
+}
 
+function renderLogLines(logs) {
+  if (!logs || logs.length === 0) return "<p style='color:#6e7681;font-size:13px'>No log lines</p>";
+  return logs.map(l => `
+    <div class="log-entry ${l.level}">
+      <span style="color:#6e7681">[${l.level}]</span> ${escapeHtml(l.message)}
+      ${l.trace_id ? ` <span style="color:#484f58">(${l.trace_id})</span>` : ""}
+    </div>
+  `).join("");
+}
+
+function renderSamples(samples) {
+  if (!samples || samples.length === 0) return "<p style='color:#6e7681;font-size:13px'>No request samples</p>";
+  return `<table class="sample-table"><tr><th>Method</th><th>Path</th><th>Status</th></tr>${samples.map(s => `
+    <tr>
+      <td style="font-family:monospace">${s.method}</td>
+      <td style="font-family:monospace">${escapeHtml(s.path)}</td>
+      <td class="${statusClass(s.status)}" style="font-family:monospace">${s.status}</td>
+    </tr>
+  `).join("")}</table>`;
+}
+
+function renderEvidenceTab(bundle) {
+  return `
+    <div class="evidence-section">
+      <div class="section-title">Timeline</div>
+      ${renderTimeline(bundle.timeline)}
+    </div>
+    <div class="evidence-section">
+      <div class="section-title">Log Lines (${bundle.log_lines.length})</div>
+      ${renderLogLines(bundle.log_lines)}
+    </div>
+    <div class="evidence-section">
+      <div class="section-title">Request Samples (${bundle.request_samples.length})</div>
+      ${renderSamples(bundle.request_samples)}
+    </div>
+    <div class="evidence-section">
+      <div class="section-title">Related Endpoints</div>
+      <div class="endpoint-tags">${bundle.related_endpoints.map(e => `<span class="endpoint-tag">${escapeHtml(e)}</span>`).join("")}</div>
+    </div>
+    <details class="api-response">
+      <summary>Evidence Bundle JSON</summary>
+      <pre>${escapeHtml(JSON.stringify(bundle, null, 2))}</pre>
+    </details>
+  `;
+}
+
+function renderTriageTab(inc, data) {
+  const jsonBlob = JSON.stringify(data, null, 2);
+  return `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
       <span style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#6e7681">Copilot Analysis</span>
       <span style="font-size:9px;padding:2px 8px;border-radius:100px;background:#1d150d;color:#ff9900;border:1px solid #5a3a10;font-weight:500">BEDROCK</span>
@@ -278,9 +445,87 @@ function renderDetail(inc, data) {
       <pre>${escapeHtml(jsonBlob)}</pre>
     </details>
   `;
+}
 
+function renderDetail(inc, data, bundle) {
+  const el = document.getElementById("detail-view");
+  el.innerHTML = `
+    <div class="detail-header">
+      <div class="id">${inc.id} / ${inc.pattern}</div>
+      <h2>${inc.summary}</h2>
+      <div class="summary">${inc.desc}</div>
+    </div>
+
+    <div class="detail-tabs">
+      <div class="detail-tab ${activeTab === 'triage' ? 'active' : ''}" onclick="switchTab('triage')">Triage</div>
+      <div class="detail-tab ${activeTab === 'evidence' ? 'active' : ''}" onclick="switchTab('evidence')">Evidence</div>
+    </div>
+
+    <div id="triage-panel" style="display:${activeTab === 'triage' ? 'block' : 'none'}">
+      ${renderTriageTab(inc, data)}
+    </div>
+    <div id="evidence-panel" style="display:${activeTab === 'evidence' ? 'block' : 'none'}">
+      ${renderEvidenceTab(bundle)}
+    </div>
+  `;
   document.getElementById("empty-state").style.display = "none";
   el.classList.add("active");
+}
+
+function showLoading() {
+  const el = document.getElementById("detail-view");
+  el.innerHTML = `<div class="loading"><div class="spinner"></div>Running copilot...</div>`;
+  document.getElementById("empty-state").style.display = "none";
+  el.classList.add("active");
+}
+
+function showError(id) {
+  const el = document.getElementById("detail-view");
+  el.innerHTML = `
+    <div class="error-state">
+      <div class="icon">⚠</div>
+      <p>Failed to reach triage endpoint</p>
+      <button onclick="selectIncident('${id}')">Retry</button>
+    </div>
+  `;
+}
+
+function switchTab(tab) {
+  activeTab = tab;
+  const triage = document.getElementById("triage-panel");
+  const evidence = document.getElementById("evidence-panel");
+  if (!triage || !evidence) return;
+  const tabs = document.querySelectorAll(".detail-tab");
+  triage.style.display = tab === "triage" ? "block" : "none";
+  evidence.style.display = tab === "evidence" ? "block" : "none";
+  tabs.forEach(t => t.classList.toggle("active", t.textContent.toLowerCase().includes(tab)));
+}
+
+async function selectIncident(id) {
+  activeId = id;
+  activeTab = "triage";
+  renderSidebar();
+  const inc = INCIDENTS.find(i => i.id === id);
+  const bundle = EVIDENCE[inc.pattern];
+
+  if (triageCache[id]) {
+    renderDetail(inc, triageCache[id], bundle);
+    return;
+  }
+
+  showLoading();
+  try {
+    const res = await fetch("/triage", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(bundle)
+    });
+    const data = await res.json();
+    triageCache[id] = data;
+    renderDetail(inc, data, bundle);
+  } catch {
+    showError(id);
+  }
 }
 
 function copyComms(btn) {
@@ -291,18 +536,12 @@ function copyComms(btn) {
   });
 }
 
-function escapeHtml(str) {
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-// Health check
 fetch("/health").then(r => r.json()).then(d => {
   document.getElementById("status-text").textContent = d.mode === "mock" ? "Mock mode, no AWS" : "Live Bedrock";
 }).catch(() => {
   document.getElementById("status-text").textContent = "Offline";
 });
 
-// Render
 renderSidebar();
 </script>
 </body>
