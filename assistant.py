@@ -153,6 +153,20 @@ async def triage(bundle: IncidentBundle):
     return result
 
 
+@app.get("/")
+async def root():
+    return {
+        "service": "Triage Copilot",
+        "version": "1.0",
+        "mode": "mock" if BEDROCK_MOCK else "bedrock",
+        "endpoints": {
+            "health": "/health",
+            "triage": "POST /triage",
+        },
+        "docs": "https://github.com/h-vance/aws-bedrock-ops-agent",
+    }
+
+
 @app.get("/health")
 async def health():
     return {
