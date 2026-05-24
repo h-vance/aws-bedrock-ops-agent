@@ -1,7 +1,7 @@
 # AWS Bedrock Agent
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-000000?style=for-the-badge&logo=Render&logoColor=FFFFFF)](https://aws-bedrock-ops-agent.onrender.com)
-[![Deploy](https://img.shields.io/badge/Deploy%20to%20Render-000000?style=for-the-badge&logo=Render&logoColor=FFFFFF)](https://render.com/deploy)
+[![Deploy](https://img.shields.io/badge/Render-000000?style=for-the-badge&logo=Render&logoColor=FFFFFF)](https://render.com/deploy)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=FastAPI&logoColor=FFFFFF)](https://fastapi.tiangolo.com)
 [![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=Python&logoColor=FFFFFF)](https://python.org)
 
