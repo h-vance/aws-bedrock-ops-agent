@@ -1,9 +1,9 @@
 # AWS Bedrock Agent
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-46E3B7?style=for-the-badge&logo=render&logoColor=black)](https://aws-bedrock-ops-agent.onrender.com)
-[![Deploy](https://img.shields.io/badge/Deploy%20to%20Render-46E3B7?style=for-the-badge&logo=render&logoColor=black)](https://render.com/deploy)
-[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![AWS](https://img.shields.io/badge/AWS-232F3E?style=for-the-badge)](https://aws.amazon.com/bedrock/)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-000000?style=for-the-badge&logo=Render&logoColor=FFFFFF)](https://aws-bedrock-ops-agent.onrender.com)
+[![Deploy](https://img.shields.io/badge/Deploy%20to%20Render-000000?style=for-the-badge&logo=Render&logoColor=FFFFFF)](https://render.com/deploy)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=FastAPI&logoColor=FFFFFF)](https://fastapi.tiangolo.com)
+[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=Python&logoColor=FFFFFF)](https://python.org)
 
 > **L2 triage copilot for support engineers: ingests incident evidence bundles and returns hypotheses, checks, and escalation-ready notes — not a general chat assistant.**
 
