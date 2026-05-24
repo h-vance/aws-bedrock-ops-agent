@@ -68,6 +68,13 @@ MOCK_RESPONSES = {
                 "evidence_ids": ["tx-wh-001"],
                 "check_command": "curl -s -X POST http://localhost:8000/webhooks/inbound -H 'Content-Type: application/json' -d '{\"event\":\"test\"}'",
             },
+            {
+                "rank": 2,
+                "hypothesis": "Partner webhook secret was rotated without updating our integration",
+                "confidence": "medium",
+                "evidence_ids": ["tx-wh-001", "tx-wh-003"],
+                "check_command": "curl -s http://localhost:8000/webhooks/inbox | python3 -c 'import sys,json; [print(d[\"status\"]) for d in json.load(sys.stdin)[\"deliveries\"]]'",
+            },
         ],
         "recommended_checks": [
             "Verify partner's webhook secret matches our records",
@@ -85,6 +92,13 @@ MOCK_RESPONSES = {
                 "confidence": "high",
                 "evidence_ids": ["tx-to-001", "tx-to-002"],
                 "check_command": "curl -s --max-time 60 http://localhost:8000/api/v1/external-call",
+            },
+            {
+                "rank": 2,
+                "hypothesis": "No circuit breaker — every request hits upstream even when degraded",
+                "confidence": "medium",
+                "evidence_ids": ["tx-to-002", "tx-to-003"],
+                "check_command": "for i in $(seq 1 5); do curl -s -o /dev/null -w \"%{http_code} %{time_total}\\n\" --max-time 10 http://localhost:8000/api/v1/external-call; done",
             },
         ],
         "recommended_checks": [
