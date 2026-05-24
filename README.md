@@ -5,7 +5,7 @@
 
 > **L2 triage copilot for support engineers: ingests incident evidence bundles and returns hypotheses, checks, and escalation-ready notes — not a general chat assistant.**
 
-Part of the [Ops Support Demo](https://github.com/h-vance/ops-support-demo) portfolio.
+Part of the [Ops Support Demo](https://aws-bedrock-ops-agent.onrender.com/) portfolio.
 
 ## Overview
 
