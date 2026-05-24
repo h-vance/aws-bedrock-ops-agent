@@ -19,6 +19,7 @@ app.add_middleware(
 )
 
 UVICORN_PORT = int(os.getenv("PORT", 8001))
+BEDROCK_MOCK = os.getenv("BEDROCK_MOCK", "true").lower() == "true"
 LAB_BASE_URL = os.getenv("LAB_BASE_URL", "http://localhost:8000")
 
 
