@@ -6,7 +6,7 @@ import boto3
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from botocore.exceptions import ClientError
 
@@ -156,7 +156,11 @@ async def triage(bundle: IncidentBundle):
 
 @app.get("/")
 async def root():
-    return FileResponse("static/index.html")
+    html_path = os.path.join(os.path.dirname(__file__), "static", "index.html")
+    if os.path.exists(html_path):
+        with open(html_path) as f:
+            return HTMLResponse(f.read())
+    return HTMLResponse("<h1>Triage Copilot</h1><p>Demo page not found.</p>")
 
 
 @app.get("/health")
