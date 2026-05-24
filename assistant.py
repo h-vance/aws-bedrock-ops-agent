@@ -6,6 +6,7 @@ import boto3
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from botocore.exceptions import ClientError
 
@@ -155,16 +156,7 @@ async def triage(bundle: IncidentBundle):
 
 @app.get("/")
 async def root():
-    return {
-        "service": "Triage Copilot",
-        "version": "1.0",
-        "mode": "mock" if BEDROCK_MOCK else "bedrock",
-        "endpoints": {
-            "health": "/health",
-            "triage": "POST /triage",
-        },
-        "docs": "https://github.com/h-vance/aws-bedrock-ops-agent",
-    }
+    return FileResponse("static/index.html")
 
 
 @app.get("/health")
