@@ -1,6 +1,6 @@
 # AWS Bedrock Agent
 
-[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen?logo=render)](https://triage-copilot.onrender.com)
+[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen?logo=render)](https://aws-bedrock-ops-agent.onrender.com)
 [![Deploy to Render](https://img.shields.io/badge/deploy%20to-render-%2346E3B7)](https://render.com/deploy)
 
 > **L2 triage copilot for support engineers: ingests incident evidence bundles and returns hypotheses, checks, and escalation-ready notes — not a general chat assistant.**
@@ -94,8 +94,8 @@ Note: CORS is pre-configured to accept requests from `http://localhost:8080` and
 
 ### Live Demo (Render)
 ```bash
-curl https://triage-copilot.onrender.com/health
-curl -X POST https://triage-copilot.onrender.com/triage \
+curl https://aws-bedrock-ops-agent.onrender.com/health
+curl -X POST https://aws-bedrock-ops-agent.onrender.com/triage \
   -H "Content-Type: application/json" \
   -d '{"incident_id":"INC-001","summary":"Auth cascade after token rotation","timeline":[],"log_lines":[],"request_samples":[],"related_endpoints":[]}'
 ```

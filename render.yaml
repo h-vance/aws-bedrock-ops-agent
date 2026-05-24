@@ -2,12 +2,12 @@ services:
   - type: web
     name: triage-copilot
     runtime: python
-    repo: https://github.com/h-vance/aws-bedrock-agent
-    branch: master
+    repo: https://github.com/h-vance/aws-bedrock-ops-agent
+    branch: main
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn assistant:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: BEDROCK_MOCK
         value: "true"
       - key: LAB_BASE_URL
-        value: "https://triage-copilot.onrender.com"
+        value: "https://aws-bedrock-ops-agent.onrender.com"
