@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Triage Copilot — Incident Response Demo</title>
+<title>AWS Bedrock Ops Agent — L2 Triage Copilot</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -17,14 +17,16 @@
     background: #0d1013; flex-shrink: 0;
   }
   .topbar h1 { font-size: 16px; font-weight: 600; letter-spacing: 0.3px; }
-  .topbar h1 span { color: #58a6ff; }
+  .topbar h1 span { color: #ff9900; }
+  .topbar-subtitle { font-size: 11px; color: #6e7681; margin-left: 6px; font-weight: 400; }
+  .bedrock-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; background: #ff9900; box-shadow: 0 0 6px #ff990066; }
   .badge { font-size: 11px; padding: 3px 10px; border-radius: 100px; font-weight: 500; }
   .badge.live { background: #1a3a2a; color: #3fb950; border: 1px solid #2d6a40; }
   .badge.mock { background: #2d2a1a; color: #d29922; border: 1px solid #5a4a20; }
   .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; }
   .status-dot.green { background: #3fb950; box-shadow: 0 0 6px #3fb95066; }
   .topbar-right { display: flex; align-items: center; gap: 16px; font-size: 12px; color: #8b949e; }
-  .topbar-right a { color: #58a6ff; text-decoration: none; }
+  .topbar-right a { color: #ff9900; text-decoration: none; }
   .topbar-right a:hover { text-decoration: underline; }
 
   /* Layout */
@@ -39,8 +41,8 @@
     border: 1px solid #1e2328; transition: all 0.15s;
   }
   .incident-card:hover { border-color: #30363d; background: #161b22; }
-  .incident-card.active { border-color: #58a6ff; background: #0d1d33; }
-  .incident-id { font-size: 11px; font-weight: 600; color: #58a6ff; margin-bottom: 4px; }
+  .incident-card.active { border-color: #ff9900; background: #1d150d; }
+  .incident-id { font-size: 11px; font-weight: 600; color: #ff9900; margin-bottom: 4px; }
   .incident-summary { font-size: 12px; color: #c9d1d9; line-height: 1.4; }
   .incident-pattern { font-size: 10px; color: #6e7681; margin-top: 4px; }
   .incident-severity { font-size: 10px; margin-top: 6px; }
@@ -61,7 +63,7 @@
   .detail.active { display: block; }
 
   .detail-header { margin-bottom: 24px; }
-  .detail-header .id { font-size: 12px; color: #58a6ff; font-weight: 600; }
+  .detail-header .id { font-size: 12px; color: #ff9900; font-weight: 600; }
   .detail-header h2 { font-size: 20px; margin: 4px 0; font-weight: 600; }
   .detail-header .summary { font-size: 13px; color: #8b949e; line-height: 1.5; }
 
@@ -82,7 +84,7 @@
 
   .checks { list-style: none; }
   .checks li { font-size: 13px; padding: 6px 0; color: #c9d1d9; }
-  .checks li::before { content: "→"; color: #58a6ff; margin-right: 8px; }
+  .checks li::before { content: "→"; color: #ff9900; margin-right: 8px; }
 
   .escalation-box { margin-top: 24px; padding: 16px; border-radius: 8px; border: 1px solid; }
   .escalation-box.ready { border-color: #2d6a40; background: #0f1f15; }
@@ -97,19 +99,11 @@
   }
   .escalation-box .copy-btn:hover { background: #1c2128; }
 
-  /* Loading */
-  .loading { display: flex; align-items: center; gap: 8px; color: #6e7681; font-size: 13px; padding: 40px; justify-content: center; }
-  .spinner { width: 16px; height: 16px; border: 2px solid #30363d; border-top-color: #58a6ff; border-radius: 50%; animation: spin 0.8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner { width: 16px; height: 16px; border: 2px solid #30363d; border-top-color: #ff9900; border-radius: 50%; animation: spin 0.8s linear infinite; }
 
-  .tabs { display: flex; gap: 0; border-bottom: 1px solid #1e2328; margin-bottom: 24px; }
-  .tab { font-size: 12px; padding: 10px 20px; cursor: pointer; color: #6e7681; border-bottom: 2px solid transparent; }
-  .tab:hover { color: #c9d1d9; }
-  .tab.active { color: #c9d1d9; border-bottom-color: #58a6ff; }
+  .tab.active { color: #c9d1d9; border-bottom-color: #ff9900; }
 
-  /* API Response */
-  .api-response { margin-top: 24px; }
-  .api-response summary { cursor: pointer; font-size: 12px; color: #58a6ff; padding: 8px 0; }
+  .api-response summary { cursor: pointer; font-size: 12px; color: #ff9900; padding: 8px 0; }
   .api-response pre { font-size: 11px; background: #040608; border: 1px solid #1e2328; border-radius: 6px; padding: 14px; overflow-x: auto; max-height: 300px; }
 
   @media (max-width: 700px) {
@@ -121,7 +115,7 @@
 <body>
 <div class="topbar">
   <div style="display:flex;align-items:center;gap:12px">
-    <h1><span>Triage</span> Copilot</h1>
+    <h1><span class="bedrock-dot"></span><span>Bedrock</span> Ops Agent <span class="topbar-subtitle">L2 triage copilot</span></h1>
     <span class="badge live"><span class="status-dot green"></span>Live Demo</span>
     <span class="badge mock">Mock Mode</span>
   </div>
@@ -134,21 +128,30 @@
 
 <div class="layout">
   <div class="sidebar">
-    <div class="sidebar-label">Incidents</div>
+    <div class="sidebar-label">Sample Incidents</div>
     <div id="incident-list"></div>
     <div style="font-size:10px;color:#484f58;padding:8px;margin-top:8px;border-top:1px solid #1e2328">
-      Click an incident to triage it
+      Click an incident to run the copilot
     </div>
   </div>
   <div class="main" id="main-content">
     <div class="empty-state" id="empty-state">
-      <div class="icon">⚡</div>
-      <h2>Select an incident</h2>
-      <p>
-        Choose an incident from the sidebar to generate structured triage hypotheses,
-        recommended checks, and escalation notes — all running in <span class="shortcut">mock mode</span>.
-        No AWS account needed.
+      <div style="font-size:32px;margin-bottom:16px;opacity:0.6;font-weight:300;letter-spacing:2px">[ ops ]</div>
+      <h2>AWS Bedrock Ops Agent</h2>
+      <p style="max-width:520px;margin-bottom:16px">
+        A structured L2 triage copilot for support engineers. Ingest incident evidence and get ranked hypotheses,
+        recommended checks, and escalation-ready customer communications — grounded in data, not general chat.
       </p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+        <span class="shortcut">1. Select an incident</span>
+        <span style="color:#484f58">→</span>
+        <span class="shortcut">2. Copilot analyzes evidence</span>
+        <span style="color:#484f58">→</span>
+        <span class="shortcut">3. Get triage output</span>
+      </div>
+      <div style="margin-top:24px;font-size:11px;color:#484f58">
+        FastAPI · AWS Bedrock · <span class="shortcut">mock mode</span> (no AWS account needed)
+      </div>
     </div>
     <div id="detail-view" class="detail"></div>
   </div>
@@ -239,6 +242,11 @@ function renderDetail(inc, data) {
       <div class="summary">${inc.desc}</div>
     </div>
 
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+      <span style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#6e7681">Copilot Analysis</span>
+      <span style="font-size:9px;padding:2px 8px;border-radius:100px;background:#1d150d;color:#ff9900;border:1px solid #5a3a10;font-weight:500">BEDROCK</span>
+    </div>
+
     <div class="section-title">Hypotheses (${data.hypotheses.length})</div>
     ${data.hypotheses.map(h => `
       <div class="hypothesis">
@@ -266,7 +274,7 @@ function renderDetail(inc, data) {
     </div>
 
     <details class="api-response">
-      <summary>Raw API Response</summary>
+      <summary>Copilot JSON Response</summary>
       <pre>${escapeHtml(jsonBlob)}</pre>
     </details>
   `;
