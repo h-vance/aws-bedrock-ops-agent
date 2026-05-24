@@ -1,7 +1,9 @@
 # AWS Bedrock Agent
 
-[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen?logo=render)](https://aws-bedrock-ops-agent.onrender.com)
-[![Deploy to Render](https://img.shields.io/badge/deploy%20to-render-%2346E3B7)](https://render.com/deploy)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-46E3B7?style=for-the-badge&logo=render&logoColor=black)](https://aws-bedrock-ops-agent.onrender.com)
+[![Deploy](https://img.shields.io/badge/Deploy%20to%20Render-46E3B7?style=for-the-badge&logo=render&logoColor=black)](https://render.com/deploy)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![AWS](https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazonaws&logoColor=white)](https://aws.amazon.com/bedrock/)
 
 > **L2 triage copilot for support engineers: ingests incident evidence bundles and returns hypotheses, checks, and escalation-ready notes — not a general chat assistant.**
 
