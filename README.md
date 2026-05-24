@@ -1,9 +1,16 @@
 # AWS Bedrock Agent
 
+<<<<<<< HEAD
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-000000?style=for-the-badge&logo=Render&logoColor=FFFFFF)](https://aws-bedrock-ops-agent.onrender.com)
 [![Deploy](https://img.shields.io/badge/Render-000000?style=for-the-badge&logo=Render&logoColor=FFFFFF)](https://render.com/deploy)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=FastAPI&logoColor=FFFFFF)](https://fastapi.tiangolo.com)
 [![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=Python&logoColor=FFFFFF)](https://python.org)
+=======
+[![Live Demo](https://www.shieldcn.dev/badge/Live%20Demo-000000.svg?variant=default&logo=Render&logoColor=FFFFFF&size=xs)](https://aws-bedrock-ops-agent.onrender.com)
+[![Deploy](https://www.shieldcn.dev/badge/Deploy%20to%20Render-000000.svg?variant=default&logo=Render&logoColor=FFFFFF&size=xs)](https://render.com/deploy)
+[![FastAPI](https://www.shieldcn.dev/badge/FastAPI-009688.svg?variant=default&logo=FastAPI&logoColor=FFFFFF&size=xs)](https://fastapi.tiangolo.com)
+[![Python](https://www.shieldcn.dev/badge/Python-3776AB.svg?variant=default&logo=Python&logoColor=FFFFFF&size=xs)](https://python.org)
+>>>>>>> 3515942 (refactor: migrate badges from shields.io to shieldcn (variant=default, size=xs))
 
 > **L2 triage copilot for support engineers: ingests incident evidence bundles and returns hypotheses, checks, and escalation-ready notes — not a general chat assistant.**
 
