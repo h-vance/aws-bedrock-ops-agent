@@ -313,15 +313,16 @@ let activeTab = "triage";
 let triageCache = {};
 
 function dotClass(event) {
-  const e = event.toLowerCase();
+  const e = String(event ?? "").toLowerCase();
   if (e.includes("fail") || e.includes("error") || e.includes("reject") || e.includes("timeout") || e.includes("broken") || e.includes("401") || e.includes("403") || e.includes("400")) return "error";
   if (e.includes("warn") || e.includes("retry") || e.includes("rate-lim")) return "warn";
   return "ok";
 }
 
 function statusClass(status) {
-  if (status >= 200 && status < 300) return "status-2xx";
-  if (status >= 400 && status < 500) return "status-4xx";
+  const code = Number(status);
+  if (code >= 200 && code < 300) return "status-2xx";
+  if (code >= 400 && code < 500) return "status-4xx";
   return "status-5xx";
 }
 
@@ -329,16 +330,29 @@ function renderSidebar() {
   const list = document.getElementById("incident-list");
   list.innerHTML = INCIDENTS.map(inc => `
     <div class="incident-card ${activeId === inc.id ? 'active' : ''}" onclick="selectIncident('${inc.id}')">
-      <div class="incident-id">${inc.id}</div>
-      <div class="incident-summary">${inc.summary}</div>
-      <div class="incident-pattern">pattern: ${inc.pattern}</div>
-      <div class="incident-severity ${inc.severity === 'high' ? 'sev-high' : 'sev-mid'}">${inc.severity.toUpperCase()} severity</div>
+      <div class="incident-id">${escapeHtml(inc.id)}</div>
+      <div class="incident-summary">${escapeHtml(inc.summary)}</div>
+      <div class="incident-pattern">pattern: ${escapeHtml(inc.pattern)}</div>
+      <div class="incident-severity ${inc.severity === 'high' ? 'sev-high' : 'sev-mid'}">${escapeHtml(inc.severity.toUpperCase())} severity</div>
     </div>
   `).join("");
 }
 
 function escapeHtml(str) {
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return String(str ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function asArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function safeToken(value, allowed, fallback) {
+  return allowed.includes(value) ? value : fallback;
 }
 
 function formatTs(ts) {
@@ -354,7 +368,7 @@ function renderTimeline(timeline) {
       <div class="timeline-top">
         <span class="timeline-ts">${formatTs(t.ts)}</span>
         <span class="timeline-text">${escapeHtml(t.event)}</span>
-        ${t.trace_id && t.trace_id !== "n/a" ? `<span class="timeline-trace">${t.trace_id}</span>` : ""}
+        ${t.trace_id && t.trace_id !== "n/a" ? `<span class="timeline-trace">${escapeHtml(t.trace_id)}</span>` : ""}
       </div>
     </div>
   `).join("")}</div>`;
@@ -363,9 +377,9 @@ function renderTimeline(timeline) {
 function renderLogLines(logs) {
   if (!logs || logs.length === 0) return "<p style='color:#6e7681;font-size:13px'>No log lines</p>";
   return logs.map(l => `
-    <div class="log-entry ${l.level}">
-      <span style="color:#6e7681">[${l.level}]</span> ${escapeHtml(l.message)}
-      ${l.trace_id ? ` <span style="color:#484f58">(${l.trace_id})</span>` : ""}
+    <div class="log-entry ${safeToken(l.level, ["INFO", "WARNING", "ERROR"], "INFO")}">
+      <span style="color:#6e7681">[${escapeHtml(l.level)}]</span> ${escapeHtml(l.message)}
+      ${l.trace_id ? ` <span style="color:#484f58">(${escapeHtml(l.trace_id)})</span>` : ""}
     </div>
   `).join("");
 }
@@ -374,30 +388,34 @@ function renderSamples(samples) {
   if (!samples || samples.length === 0) return "<p style='color:#6e7681;font-size:13px'>No request samples</p>";
   return `<table class="sample-table"><tr><th>Method</th><th>Path</th><th>Status</th></tr>${samples.map(s => `
     <tr>
-      <td style="font-family:monospace">${s.method}</td>
+      <td style="font-family:monospace">${escapeHtml(s.method)}</td>
       <td style="font-family:monospace">${escapeHtml(s.path)}</td>
-      <td class="${statusClass(s.status)}" style="font-family:monospace">${s.status}</td>
+      <td class="${statusClass(s.status)}" style="font-family:monospace">${escapeHtml(s.status)}</td>
     </tr>
   `).join("")}</table>`;
 }
 
 function renderEvidenceTab(bundle) {
+  const timeline = asArray(bundle.timeline);
+  const logLines = asArray(bundle.log_lines);
+  const requestSamples = asArray(bundle.request_samples);
+  const relatedEndpoints = asArray(bundle.related_endpoints);
   return `
     <div class="evidence-section">
       <div class="section-title">Timeline</div>
-      ${renderTimeline(bundle.timeline)}
+      ${renderTimeline(timeline)}
     </div>
     <div class="evidence-section">
-      <div class="section-title">Log Lines (${bundle.log_lines.length})</div>
-      ${renderLogLines(bundle.log_lines)}
+      <div class="section-title">Log Lines (${logLines.length})</div>
+      ${renderLogLines(logLines)}
     </div>
     <div class="evidence-section">
-      <div class="section-title">Request Samples (${bundle.request_samples.length})</div>
-      ${renderSamples(bundle.request_samples)}
+      <div class="section-title">Request Samples (${requestSamples.length})</div>
+      ${renderSamples(requestSamples)}
     </div>
     <div class="evidence-section">
       <div class="section-title">Related Endpoints</div>
-      <div class="endpoint-tags">${bundle.related_endpoints.map(e => `<span class="endpoint-tag">${escapeHtml(e)}</span>`).join("")}</div>
+      <div class="endpoint-tags">${relatedEndpoints.map(e => `<span class="endpoint-tag">${escapeHtml(e)}</span>`).join("")}</div>
     </div>
     <details class="api-response">
       <summary>Evidence Bundle JSON</summary>
@@ -408,35 +426,38 @@ function renderEvidenceTab(bundle) {
 
 function renderTriageTab(inc, data) {
   const jsonBlob = JSON.stringify(data, null, 2);
+  const hypotheses = asArray(data.hypotheses);
+  const recommendedChecks = asArray(data.recommended_checks);
+  const escalationReady = Boolean(data.escalation_ready);
   return `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
       <span style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#6e7681">Copilot Analysis</span>
       <span style="font-size:9px;padding:2px 8px;border-radius:100px;background:#1d150d;color:#ff9900;border:1px solid #5a3a10;font-weight:500">BEDROCK</span>
     </div>
 
-    <div class="section-title">Hypotheses (${data.hypotheses.length})</div>
-    ${data.hypotheses.map(h => `
+    <div class="section-title">Hypotheses (${hypotheses.length})</div>
+    ${hypotheses.map(h => `
       <div class="hypothesis">
         <div class="hypothesis-header">
-          <span class="hypothesis-rank">Hypothesis #${h.rank}</span>
-          <span class="confidence ${h.confidence}">${h.confidence}</span>
+          <span class="hypothesis-rank">Hypothesis #${escapeHtml(h.rank)}</span>
+          <span class="confidence ${safeToken(h.confidence, ["high", "medium", "low"], "low")}">${escapeHtml(h.confidence)}</span>
         </div>
-        <div class="hypothesis-text">${h.hypothesis}</div>
+        <div class="hypothesis-text">${escapeHtml(h.hypothesis)}</div>
         <div class="evidence-ids">
-          ${h.evidence_ids.map(e => `<span class="evidence-tag">${e}</span>`).join("")}
+          ${asArray(h.evidence_ids).map(e => `<span class="evidence-tag">${escapeHtml(e)}</span>`).join("")}
         </div>
-        <div class="check-command">${h.check_command}</div>
+        <div class="check-command">${escapeHtml(h.check_command)}</div>
       </div>
     `).join("")}
 
     <div class="section-title">Recommended Checks</div>
     <ul class="checks">
-      ${data.recommended_checks.map(c => `<li>${c}</li>`).join("")}
+      ${recommendedChecks.map(c => `<li>${escapeHtml(c)}</li>`).join("")}
     </ul>
 
-    <div class="escalation-box ${data.escalation_ready ? 'ready' : 'not-ready'}">
-      <div class="label">${data.escalation_ready ? 'Ready for Escalation' : 'Gather More Evidence'}</div>
-      <div class="comms">${data.customer_comms_draft}</div>
+    <div class="escalation-box ${escalationReady ? 'ready' : 'not-ready'}">
+      <div class="label">${escalationReady ? 'Ready for Escalation' : 'Gather More Evidence'}</div>
+      <div class="comms">${escapeHtml(data.customer_comms_draft)}</div>
       <button class="copy-btn" onclick="copyComms(this)">Copy to Clipboard</button>
     </div>
 
@@ -451,9 +472,9 @@ function renderDetail(inc, data, bundle) {
   const el = document.getElementById("detail-view");
   el.innerHTML = `
     <div class="detail-header">
-      <div class="id">${inc.id} / ${inc.pattern}</div>
-      <h2>${inc.summary}</h2>
-      <div class="summary">${inc.desc}</div>
+      <div class="id">${escapeHtml(inc.id)} / ${escapeHtml(inc.pattern)}</div>
+      <h2>${escapeHtml(inc.summary)}</h2>
+      <div class="summary">${escapeHtml(inc.desc)}</div>
     </div>
 
     <div class="detail-tabs">
@@ -482,11 +503,11 @@ function showLoading() {
 function showError(id) {
   const el = document.getElementById("detail-view");
   el.innerHTML = `
-    <div class="error-state">
-      <div class="icon">⚠</div>
-      <p>Failed to reach triage endpoint</p>
-      <button onclick="selectIncident('${id}')">Retry</button>
-    </div>
+      <div class="error-state">
+        <div class="icon">⚠</div>
+        <p>Failed to reach triage endpoint</p>
+        <button onclick="selectIncident(activeId)">Retry</button>
+      </div>
   `;
 }
 
@@ -520,6 +541,7 @@ async function selectIncident(id) {
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify(bundle)
     });
+    if (!res.ok) throw new Error(`triage failed: ${res.status}`);
     const data = await res.json();
     triageCache[id] = data;
     renderDetail(inc, data, bundle);
