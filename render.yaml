@@ -11,3 +11,5 @@ services:
         value: "true"
       - key: LAB_BASE_URL
         value: "https://aws-bedrock-ops-agent.onrender.com"
+      - key: CORS_ORIGINS
+        value: "https://aws-bedrock-ops-agent.onrender.com,http://localhost:8080,http://127.0.0.1:8080"

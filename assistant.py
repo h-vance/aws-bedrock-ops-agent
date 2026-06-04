@@ -1,35 +1,60 @@
 import os
 import json
+from copy import deepcopy
 
-import boto3
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel
-from botocore.exceptions import ClientError
+from pydantic import BaseModel, Field
 
 app = FastAPI(title="Triage Copilot")
 
+CORS_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv(
+        "CORS_ORIGINS",
+        "http://localhost:8080,http://127.0.0.1:8080",
+    ).split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8080", "http://127.0.0.1:8080"],
+    allow_origins=CORS_ORIGINS,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization"],
 )
 
 UVICORN_PORT = int(os.getenv("PORT", 8001))
 BEDROCK_MOCK = os.getenv("BEDROCK_MOCK", "true").lower() == "true"
-LAB_BASE_URL = os.getenv("LAB_BASE_URL", "http://localhost:8000")
+LAB_BASE_URL = os.getenv("LAB_BASE_URL", "http://failure-lab:8000")
+AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+BEDROCK_MODEL_ID = os.getenv("BEDROCK_MODEL_ID", "amazon.titan-text-express-v1")
 
 
 class IncidentBundle(BaseModel):
     incident_id: str
     summary: str
-    timeline: list[dict] = []
-    log_lines: list[dict] = []
-    request_samples: list[dict] = []
-    related_endpoints: list[str] = []
+    timeline: list[dict] = Field(default_factory=list)
+    log_lines: list[dict] = Field(default_factory=list)
+    request_samples: list[dict] = Field(default_factory=list)
+    related_endpoints: list[str] = Field(default_factory=list)
+
+
+class Hypothesis(BaseModel):
+    rank: int
+    hypothesis: str
+    confidence: str
+    evidence_ids: list[str] = Field(default_factory=list)
+    check_command: str = ""
+
+
+class TriageResult(BaseModel):
+    hypotheses: list[Hypothesis] = Field(default_factory=list)
+    recommended_checks: list[str] = Field(default_factory=list)
+    escalation_ready: bool = False
+    customer_comms_draft: str = ""
 
 
 MOCK_RESPONSES = {
@@ -122,8 +147,31 @@ def _classify_incident(summary: str) -> str:
     return "auth"
 
 
+def _bedrock_client():
+    try:
+        import boto3
+    except ImportError as exc:
+        raise RuntimeError("boto3 is required when BEDROCK_MOCK=false") from exc
+
+    return boto3.client("bedrock-runtime", region_name=AWS_REGION)
+
+
+def _fallback_triage(error: Exception) -> dict:
+    return TriageResult(
+        hypotheses=[
+            Hypothesis(
+                rank=1,
+                hypothesis=f"Bedrock error: {error}",
+                confidence="low",
+            )
+        ],
+        escalation_ready=True,
+        customer_comms_draft="Unable to complete AI triage due to model error.",
+    ).model_dump()
+
+
 def _call_bedrock(bundle: IncidentBundle) -> dict:
-    bedrock = boto3.client("bedrock-runtime", region_name="us-east-1")
+    bedrock = _bedrock_client()
     prompt = (
         f"You are an L2 support engineer triaging an incident. "
         f"Analyze this evidence and return structured hypotheses, checks, and escalation readiness. "
@@ -135,28 +183,23 @@ def _call_bedrock(bundle: IncidentBundle) -> dict:
     )
     try:
         response = bedrock.converse(
-            modelId="amazon.titan-text-express-v1",
+            modelId=BEDROCK_MODEL_ID,
             messages=[{"role": "user", "content": [{"text": prompt}]}],
         )
         text = response["output"]["message"]["content"][0]["text"]
-        return json.loads(text)
-    except (ClientError, json.JSONDecodeError, KeyError) as e:
-        return {
-            "hypotheses": [{"rank": 1, "hypothesis": f"Bedrock error: {e}", "confidence": "low"}],
-            "recommended_checks": [],
-            "escalation_ready": True,
-            "customer_comms_draft": "Unable to complete AI triage due to model error.",
-        }
+        return TriageResult.model_validate(json.loads(text)).model_dump()
+    except Exception as e:
+        return _fallback_triage(e)
 
 
 @app.post("/triage")
 async def triage(bundle: IncidentBundle):
-    if not bundle.incident_id:
+    if not bundle.incident_id.strip():
         raise HTTPException(status_code=400, detail="incident_id is required")
 
     if BEDROCK_MOCK:
         category = _classify_incident(bundle.summary)
-        result = MOCK_RESPONSES.get(category, MOCK_RESPONSES["auth"]).copy()
+        result = deepcopy(MOCK_RESPONSES.get(category, MOCK_RESPONSES["auth"]))
         result["incident_id"] = bundle.incident_id
         result["mode"] = "mock"
         return result
@@ -188,14 +231,14 @@ async def health():
 def lambda_handler(event, context):
     user_input = event.get("text", "Hello")
     try:
-        bedrock = boto3.client("bedrock-runtime", region_name="us-east-1")
+        bedrock = _bedrock_client()
         response = bedrock.converse(
-            modelId="amazon.titan-text-express-v1",
+            modelId=BEDROCK_MODEL_ID,
             messages=[{"role": "user", "content": [{"text": user_input}]}],
         )
         result = response["output"]["message"]["content"][0]["text"]
-    except ClientError as error:
-        result = f"Gracefully caught an API error: {error.response['Error']['Code']}"
+    except Exception as error:
+        result = f"Gracefully caught a Bedrock error: {error}"
     return {"statusCode": 200, "body": json.dumps({"response": result})}
 
 
@@ -209,9 +252,9 @@ if __name__ == "__main__":
             user_input = input("\nYou: ")
             if user_input.lower() == "quit":
                 break
-            bedrock = boto3.client("bedrock-runtime", region_name="us-east-1")
+            bedrock = _bedrock_client()
             response = bedrock.converse(
-                modelId="amazon.titan-text-express-v1",
+                modelId=BEDROCK_MODEL_ID,
                 messages=[{"role": "user", "content": [{"text": user_input}]}],
             )
             print(f"Assistant: {response['output']['message']['content'][0]['text']}")
