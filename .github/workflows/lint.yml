@@ -14,12 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - name: Run Markdownlint
-        run: npx --yes markdownlint-cli2
       - name: Check links
         uses: lycheeverse/lychee-action@v2
         with:
@@ -43,16 +37,3 @@ jobs:
         run: ruff check .
       - name: Run tests
         run: pytest
-
-  terraform:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
-      - name: Check Terraform formatting
-        run: terraform fmt -check
-      - name: Initialize Terraform
-        run: terraform init -backend=false
-      - name: Validate Terraform
-        run: terraform validate

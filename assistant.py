@@ -1,11 +1,12 @@
 import os
 import json
 from copy import deepcopy
+from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel, Field
 
 app = FastAPI(title="Triage Copilot")
@@ -31,6 +32,7 @@ BEDROCK_MOCK = os.getenv("BEDROCK_MOCK", "true").lower() == "true"
 LAB_BASE_URL = os.getenv("LAB_BASE_URL", "http://failure-lab:8000")
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 BEDROCK_MODEL_ID = os.getenv("BEDROCK_MODEL_ID", "amazon.titan-text-express-v1")
+STATIC_INDEX = Path(__file__).with_name("static") / "index.html"
 
 
 class IncidentBundle(BaseModel):
@@ -212,10 +214,8 @@ async def triage(bundle: IncidentBundle):
 
 @app.get("/")
 async def root():
-    html_path = os.path.join(os.path.dirname(__file__), "static", "index.html")
-    if os.path.exists(html_path):
-        with open(html_path) as f:
-            return HTMLResponse(f.read())
+    if STATIC_INDEX.exists():
+        return FileResponse(STATIC_INDEX)
     return HTMLResponse("<h1>Triage Copilot</h1><p>Demo page not found.</p>")
 
 
@@ -228,35 +228,5 @@ async def health():
     }
 
 
-def lambda_handler(event, context):
-    user_input = event.get("text", "Hello")
-    try:
-        bedrock = _bedrock_client()
-        response = bedrock.converse(
-            modelId=BEDROCK_MODEL_ID,
-            messages=[{"role": "user", "content": [{"text": user_input}]}],
-        )
-        result = response["output"]["message"]["content"][0]["text"]
-    except Exception as error:
-        result = f"Gracefully caught a Bedrock error: {error}"
-    return {"statusCode": 200, "body": json.dumps({"response": result})}
-
-
 if __name__ == "__main__":
-    import sys
-    if "--api" in sys.argv:
-        uvicorn.run(app, host="0.0.0.0", port=UVICORN_PORT)
-    elif "--legacy-chat" in sys.argv:
-        print("Legacy chat mode. Type 'quit' to exit.")
-        while True:
-            user_input = input("\nYou: ")
-            if user_input.lower() == "quit":
-                break
-            bedrock = _bedrock_client()
-            response = bedrock.converse(
-                modelId=BEDROCK_MODEL_ID,
-                messages=[{"role": "user", "content": [{"text": user_input}]}],
-            )
-            print(f"Assistant: {response['output']['message']['content'][0]['text']}")
-    else:
-        uvicorn.run(app, host="0.0.0.0", port=UVICORN_PORT)
+    uvicorn.run(app, host="0.0.0.0", port=UVICORN_PORT)
