@@ -4,7 +4,6 @@ import unittest
 from fastapi.testclient import TestClient
 
 import assistant
-import lambda_handler
 
 
 class FakeBedrockClient:
@@ -97,19 +96,6 @@ class AssistantApiTests(unittest.TestCase):
         self.assertTrue(result["escalation_ready"])
         self.assertEqual(result["hypotheses"][0]["confidence"], "low")
         self.assertEqual(result["recommended_checks"], [])
-
-
-class LambdaHandlerTests(unittest.TestCase):
-    def test_lambda_handler_uses_minimal_bedrock_entrypoint(self):
-        original_client = lambda_handler._bedrock_client
-        lambda_handler._bedrock_client = lambda: FakeBedrockClient("hello from bedrock")
-        try:
-            response = lambda_handler.lambda_handler({"text": "hello"}, None)
-        finally:
-            lambda_handler._bedrock_client = original_client
-
-        self.assertEqual(response["statusCode"], 200)
-        self.assertEqual(json.loads(response["body"])["response"], "hello from bedrock")
 
 
 if __name__ == "__main__":

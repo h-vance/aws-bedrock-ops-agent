@@ -18,13 +18,11 @@ A structured triage copilot that consumes incident evidence from [api-failure-an
 - **Structured Triage:** `POST /triage` accepts an incident evidence bundle; returns JSON with hypotheses, checks, and escalation readiness.
 - **Mock Mode:** `BEDROCK_MOCK=true` returns deterministic canned responses — works offline with no AWS credentials.
 - **Live Bedrock Mode:** `BEDROCK_MOCK=false` invokes Amazon Bedrock Runtime with validated structured output.
-- **AWS Lambda Example:** Terraform deploys a minimal Lambda handler for Bedrock invocation and IAM review.
-- **Dual-Mode Operation:** Local FastAPI server for development and demo; Lambda handler for deployment.
 
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md) - system boundaries, request flow, modes, and known limits
-- [Operations Runbook](docs/RUNBOOK.md) - health checks, local/Render/Lambda operations, failures, and rollback
+- [Operations Runbook](docs/RUNBOOK.md) - health checks, local/Render operations, failures, and rollback
 - [Security Notes](docs/SECURITY.md) - data handling, access controls, model output safety, and review checklist
 - [Portfolio Review Guide](docs/PORTFOLIO_REVIEW.md) - suggested reviewer path, tradeoffs, and discussion topics
 
@@ -35,7 +33,7 @@ A structured triage copilot that consumes incident evidence from [api-failure-an
 pip install -r requirements.txt
 
 # Start with mock mode (no AWS needed)
-BEDROCK_MOCK=true python assistant.py --api
+BEDROCK_MOCK=true python assistant.py
 
 # Or via docker-compose in the meta-repo
 cd ../ops-support-demo && make demo
@@ -120,16 +118,8 @@ The live demo runs on Render's free tier with `BEDROCK_MOCK=true`. No AWS creden
 
 ### Local (Mock)
 ```bash
-BEDROCK_MOCK=true python assistant.py --api
+BEDROCK_MOCK=true python assistant.py
 ```
-
-### AWS Lambda
-```bash
-# Deploys lambda_handler.lambda_handler with 30s timeout + Bedrock and log IAM
-terraform init && terraform apply
-```
-
-The Terraform config (`main.tf`) zips `lambda_handler.py`, creates a Lambda function with `lambda_handler.lambda_handler` as entry point, 30-second timeout, and an IAM role scoped to Bedrock invocation plus CloudWatch Logs writes. The Lambda handler is a minimal Bedrock text endpoint; the FastAPI triage demo is deployed separately through Render or Docker.
 
 ## CORS
 
@@ -141,13 +131,11 @@ The FastAPI app includes pre-configured `CORSMiddleware` allowing `http://localh
 pip install -r requirements-dev.txt
 ruff check .
 pytest
-terraform fmt -check
-terraform validate
 ```
 
 ## Security
 
-Follows Principle of Least Privilege. The Lambda IAM role is scoped to `bedrock:InvokeModel` plus the CloudWatch Logs actions required for runtime logging.
+Use least-privilege AWS credentials for live Bedrock mode. Keep the public demo in mock mode unless authentication, rate limiting, and stricter observability are added.
 
 ## Related
 
