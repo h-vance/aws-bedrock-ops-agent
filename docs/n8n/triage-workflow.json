@@ -1,0 +1,109 @@
+{
+  "name": "Bedrock Ops Triage → Slack",
+  "nodes": [
+    {
+      "id": "webhook-ticket-in",
+      "name": "Ticket Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-460, 260],
+      "webhookId": "bedrock-ops-triage",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "bedrock-ops-triage",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "http-call-triage",
+      "name": "Call Triage API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-220, 260],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.TRIAGE_API_URL || 'https://aws-bedrock-ops-agent.onrender.com' }}/triage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  incident_id: $json.ticket_id || $json.incident_id || ('TICKET-' + Date.now()),\n  summary: $json.summary || $json.subject || $json.description || '',\n  timeline: $json.timeline || [],\n  log_lines: $json.log_lines || [],\n  request_samples: $json.request_samples || [],\n  related_endpoints: $json.related_endpoints || []\n}) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "format-slack-message",
+      "name": "Format Slack Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [20, 260],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "slack-text",
+              "name": "slack_text",
+              "type": "string",
+              "value": "={{ ':rotating_light: *Triage: ' + $json.incident_id + '*' + '\\n*Top hypothesis (' + $json.hypotheses[0].confidence + '):* ' + $json.hypotheses[0].hypothesis + ($json.hypotheses[0].check_command ? ('\\n*Check:* `' + $json.hypotheses[0].check_command + '`') : '') + '\\n*Escalation ready:* ' + $json.escalation_ready + '\\n*Suggested customer note:* ' + $json.customer_comms_draft + '\\n_mode: ' + $json.mode + '_' }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "slack-post",
+      "name": "Post to Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [260, 260],
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "REPLACE_WITH_YOUR_CHANNEL_ID"
+        },
+        "text": "={{ $json.slack_text }}",
+        "otherOptions": {}
+      },
+      "credentials": {
+        "slackApi": {
+          "id": "REPLACE_AFTER_IMPORT",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "id": "webhook-response",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [500, 260],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { status: 'triaged', incident_id: $('Call Triage API').item.json.incident_id, escalation_ready: $('Call Triage API').item.json.escalation_ready } }}"
+      }
+    }
+  ],
+  "connections": {
+    "Ticket Webhook": {
+      "main": [[{ "node": "Call Triage API", "type": "main", "index": 0 }]]
+    },
+    "Call Triage API": {
+      "main": [[{ "node": "Format Slack Message", "type": "main", "index": 0 }]]
+    },
+    "Format Slack Message": {
+      "main": [[{ "node": "Post to Slack", "type": "main", "index": 0 }]]
+    },
+    "Post to Slack": {
+      "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

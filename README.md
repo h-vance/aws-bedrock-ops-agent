@@ -24,6 +24,7 @@ A structured triage copilot that consumes incident evidence from [api-failure-an
 
 - [Architecture](docs/ARCHITECTURE.md) - system boundaries, request flow, modes, and known limits
 - [MCP Server](docs/MCP_SERVER.md) - the `/mcp` tool surface, transport, and how to connect a client
+- [n8n Workflow](docs/N8N_WORKFLOW.md) - webhook → triage → Slack automation, ready to import
 - [Operations Runbook](docs/RUNBOOK.md) - health checks, local/Render operations, failures, and rollback
 - [Security Notes](docs/SECURITY.md) - data handling, access controls, model output safety, and review checklist
 - [Portfolio Review Guide](docs/PORTFOLIO_REVIEW.md) - suggested reviewer path, tradeoffs, and discussion topics
