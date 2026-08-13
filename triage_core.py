@@ -1,9 +1,7 @@
-import base64
 import json
 import os
 from copy import deepcopy
 
-from opentelemetry import trace
 from pydantic import BaseModel, Field
 
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
@@ -13,34 +11,23 @@ LANGFUSE_PUBLIC_KEY = os.getenv("LANGFUSE_PUBLIC_KEY")
 LANGFUSE_SECRET_KEY = os.getenv("LANGFUSE_SECRET_KEY")
 LANGFUSE_HOST = os.getenv("LANGFUSE_HOST", "https://us.cloud.langfuse.com")
 
+_langfuse_client = None
 
-def _init_tracer():
-    # No-op unless both Langfuse keys are configured — get_tracer() with no
-    # provider registered returns OpenTelemetry's built-in no-op tracer, so
-    # every span/attribute call below is a safe no-op when unconfigured.
+
+def _get_langfuse():
+    # No-op unless both keys are configured -- callers must treat None as
+    # "tracing disabled" and skip straight to the plain Bedrock call.
+    global _langfuse_client
     if not (LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY):
-        return trace.get_tracer(__name__)
+        return None
+    if _langfuse_client is None:
+        os.environ.setdefault("LANGFUSE_PUBLIC_KEY", LANGFUSE_PUBLIC_KEY)
+        os.environ.setdefault("LANGFUSE_SECRET_KEY", LANGFUSE_SECRET_KEY)
+        os.environ.setdefault("LANGFUSE_BASE_URL", LANGFUSE_HOST)
+        from langfuse import get_client
 
-    from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
-    from opentelemetry.sdk.resources import Resource
-    from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import BatchSpanProcessor
-
-    auth = base64.b64encode(f"{LANGFUSE_PUBLIC_KEY}:{LANGFUSE_SECRET_KEY}".encode()).decode()
-    exporter = OTLPSpanExporter(
-        endpoint=f"{LANGFUSE_HOST}/api/public/otel/v1/traces",
-        headers={
-            "Authorization": f"Basic {auth}",
-            "x-langfuse-ingestion-version": "4",
-        },
-    )
-    provider = TracerProvider(resource=Resource.create({"service.name": "aws-bedrock-ops-agent"}))
-    provider.add_span_processor(BatchSpanProcessor(exporter))
-    trace.set_tracer_provider(provider)
-    return trace.get_tracer(__name__)
-
-
-_tracer = _init_tracer()
+        _langfuse_client = get_client()
+    return _langfuse_client
 
 
 class IncidentBundle(BaseModel):
@@ -180,40 +167,74 @@ def _fallback_triage(error: Exception) -> dict:
     ).model_dump()
 
 
-def _call_bedrock(bundle: IncidentBundle) -> dict:
-    with _tracer.start_as_current_span("triage_incident") as span:
-        span.set_attribute("gen_ai.system", "aws.bedrock")
-        span.set_attribute("gen_ai.operation.name", "chat")
-        span.set_attribute("gen_ai.request.model", BEDROCK_MODEL_ID)
-        span.set_attribute("incident.id", bundle.incident_id)
+def _build_prompt(bundle: IncidentBundle) -> str:
+    return (
+        f"You are an L2 support engineer triaging an incident. "
+        f"Analyze this evidence and return structured hypotheses, checks, and escalation readiness. "
+        f"Incident: {bundle.summary}\n"
+        f"Timeline events: {len(bundle.timeline)}\n"
+        f"Log lines: {len(bundle.log_lines)}\n"
+        f"Request samples: {len(bundle.request_samples)}\n"
+        f"Do not invent metrics. Cite evidence trace IDs. Output JSON only."
+    )
 
-        bedrock = _bedrock_client()
-        prompt = (
-            f"You are an L2 support engineer triaging an incident. "
-            f"Analyze this evidence and return structured hypotheses, checks, and escalation readiness. "
-            f"Incident: {bundle.summary}\n"
-            f"Timeline events: {len(bundle.timeline)}\n"
-            f"Log lines: {len(bundle.log_lines)}\n"
-            f"Request samples: {len(bundle.request_samples)}\n"
-            f"Do not invent metrics. Cite evidence trace IDs. Output JSON only."
-        )
+
+def _invoke_bedrock(prompt: str) -> tuple[dict, dict]:
+    """Returns (triage result, raw Bedrock usage dict). Raises on failure."""
+    bedrock = _bedrock_client()
+    response = bedrock.converse(
+        modelId=BEDROCK_MODEL_ID,
+        messages=[{"role": "user", "content": [{"text": prompt}]}],
+    )
+    text = response["output"]["message"]["content"][0]["text"]
+    result = TriageResult.model_validate(json.loads(text)).model_dump()
+    return result, response.get("usage", {})
+
+
+def _call_bedrock(bundle: IncidentBundle) -> dict:
+    prompt = _build_prompt(bundle)
+    langfuse = _get_langfuse()
+
+    if langfuse is None:
         try:
-            response = bedrock.converse(
-                modelId=BEDROCK_MODEL_ID,
-                messages=[{"role": "user", "content": [{"text": prompt}]}],
-            )
-            text = response["output"]["message"]["content"][0]["text"]
-            usage = response.get("usage", {})
-            if usage:
-                span.set_attribute("gen_ai.usage.input_tokens", usage.get("inputTokens", 0))
-                span.set_attribute("gen_ai.usage.output_tokens", usage.get("outputTokens", 0))
-            result = TriageResult.model_validate(json.loads(text)).model_dump()
-            span.set_attribute("triage.escalation_ready", result["escalation_ready"])
+            result, _usage = _invoke_bedrock(prompt)
             return result
         except Exception as e:  # noqa: BLE001 - deliberate catch-all fallback boundary for any Bedrock/parsing failure
-            span.record_exception(e)
-            span.set_attribute("error", True)
             return _fallback_triage(e)
+
+    from langfuse import propagate_attributes
+
+    with (
+        propagate_attributes(
+            trace_name="triage-incident",
+            tags=["triage"],
+            metadata={"incident_id": bundle.incident_id},
+        ),
+        langfuse.start_as_current_observation(
+            as_type="generation",
+            name="triage-incident",
+            model=BEDROCK_MODEL_ID,
+            input=[{"role": "user", "content": prompt}],
+        ) as generation,
+    ):
+        try:
+            result, usage = _invoke_bedrock(prompt)
+            generation.update(
+                output=result,
+                usage_details={
+                    "input_tokens": usage.get("inputTokens", 0),
+                    "output_tokens": usage.get("outputTokens", 0),
+                }
+                if usage
+                else None,
+            )
+            return result
+        except Exception as e:  # noqa: BLE001 - deliberate catch-all fallback boundary for any Bedrock/parsing failure
+            fallback = _fallback_triage(e)
+            generation.update(output=fallback, level="ERROR", status_message=str(e))
+            return fallback
+        finally:
+            langfuse.flush()
 
 
 def mock_triage(bundle: IncidentBundle) -> dict:

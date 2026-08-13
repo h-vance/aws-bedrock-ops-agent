@@ -18,3 +18,8 @@ lambda_handler.zip
 
 # OS
 .DS_Store
+
+# Local tooling
+.agents/
+.claude/
+skills-lock.json
