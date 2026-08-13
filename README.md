@@ -11,7 +11,7 @@ Part of the [Ops Support Demo](https://aws-bedrock-ops-agent.onrender.com/) port
 
 ## Overview
 
-A structured triage copilot that consumes incident evidence from [api-failure-analysis](https://github.com/h-vance/api-failure-analysis) and returns ranked hypotheses, recommended checks, and escalation documentation. Designed for support engineers who need AI assistance grounded in actual incident data — not open-ended conversation.
+A structured triage copilot that consumes incident evidence bundles and returns ranked hypotheses, recommended checks, and escalation documentation. Designed for support engineers who need AI assistance grounded in actual incident data — not open-ended conversation.
 
 ## Features
 
@@ -37,16 +37,13 @@ pip install -r requirements.txt
 
 # Start with mock mode (no AWS needed)
 BEDROCK_MOCK=true python assistant.py
-
-# Or via docker-compose in the meta-repo
-cd ../ops-support-demo && make demo
 ```
 
 ## API
 
 ### POST /triage
 
-**Request** — incident evidence bundle (same schema as api-failure-analysis evidence-bundle):
+**Request** — incident evidence bundle:
 
 ```json
 {
@@ -149,8 +146,9 @@ Use least-privilege AWS credentials for live Bedrock mode. Keep the public demo 
 
 ## Related
 
-- [api-failure-analysis](https://github.com/h-vance/api-failure-analysis) — evidence engine that feeds incident bundles
-- [ops-support-demo](https://github.com/h-vance/ops-support-demo) — umbrella docker-compose demo
+- [n8n-workflow-as-code](https://github.com/h-vance/n8n-workflow-as-code) — n8n workflows that call this repo's `/mcp` tool over live JSON-RPC
+- [postman-tse-incident-lab](https://github.com/h-vance/postman-tse-incident-lab) — reproducible API incidents that produce the kind of evidence `/triage` consumes
+- [incident-postmortems](https://github.com/h-vance/incident-postmortems) — where the escalation notes end up as written RCAs
 
 ## License
 
