@@ -4,6 +4,7 @@ import unittest
 from fastapi.testclient import TestClient
 
 import assistant
+import triage_core
 
 
 class FakeBedrockClient:
@@ -56,8 +57,8 @@ class AssistantApiTests(unittest.TestCase):
         self.assertEqual(response.json()["detail"], "incident_id is required")
 
     def test_bedrock_response_is_validated(self):
-        original_client = assistant._bedrock_client
-        assistant._bedrock_client = lambda: FakeBedrockClient(
+        original_client = triage_core._bedrock_client
+        triage_core._bedrock_client = lambda: FakeBedrockClient(
             json.dumps(
                 {
                     "hypotheses": [
@@ -74,24 +75,24 @@ class AssistantApiTests(unittest.TestCase):
             )
         )
         try:
-            result = assistant._call_bedrock(
-                assistant.IncidentBundle(incident_id="INC-003", summary="timeout")
+            result = triage_core._call_bedrock(
+                triage_core.IncidentBundle(incident_id="INC-003", summary="timeout")
             )
         finally:
-            assistant._bedrock_client = original_client
+            triage_core._bedrock_client = original_client
 
         self.assertEqual(result["hypotheses"][0]["evidence_ids"], [])
         self.assertEqual(result["hypotheses"][0]["check_command"], "")
 
     def test_bedrock_malformed_json_returns_stable_fallback(self):
-        original_client = assistant._bedrock_client
-        assistant._bedrock_client = lambda: FakeBedrockClient("not json")
+        original_client = triage_core._bedrock_client
+        triage_core._bedrock_client = lambda: FakeBedrockClient("not json")
         try:
-            result = assistant._call_bedrock(
-                assistant.IncidentBundle(incident_id="INC-003", summary="timeout")
+            result = triage_core._call_bedrock(
+                triage_core.IncidentBundle(incident_id="INC-003", summary="timeout")
             )
         finally:
-            assistant._bedrock_client = original_client
+            triage_core._bedrock_client = original_client
 
         self.assertTrue(result["escalation_ready"])
         self.assertEqual(result["hypotheses"][0]["confidence"], "low")
