@@ -17,3 +17,11 @@ services:
         value: "aws-bedrock-ops-agent.onrender.com,127.0.0.1:*,localhost:*,[::1]:*"
       - key: MCP_ALLOWED_ORIGINS
         value: "https://aws-bedrock-ops-agent.onrender.com,http://127.0.0.1:*,http://localhost:*,http://[::1]:*"
+      # Tracing is a no-op until both Langfuse keys below are set — fill these
+      # in via the Render dashboard (not committed here) to enable it.
+      - key: LANGFUSE_HOST
+        value: "https://us.cloud.langfuse.com"
+      - key: LANGFUSE_PUBLIC_KEY
+        sync: false
+      - key: LANGFUSE_SECRET_KEY
+        sync: false
