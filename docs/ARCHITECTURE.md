@@ -38,7 +38,9 @@ This repo demonstrates an L2 incident triage copilot backed by Amazon Bedrock. I
 
 ## Observability
 
-`triage_core._call_bedrock` is wrapped in an OpenTelemetry span using the `gen_ai.*` semantic conventions (system, operation name, request model, token usage), exported to [Langfuse](https://langfuse.com) via its OTLP endpoint. This is a no-op unless `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are both set — with no keys configured, `opentelemetry.trace.get_tracer()` returns the library's built-in no-op tracer, so mock mode and tests are unaffected. Mock-mode triage calls (`mock_triage`) aren't traced — there's no model call to observe.
+`triage_core._call_bedrock` is wrapped in a [Langfuse](https://langfuse.com) `generation` observation via the official Python SDK (`langfuse.start_as_current_observation(as_type="generation", ...)`), with trace-level attributes (name, tags, incident metadata) set through `propagate_attributes`. This is a no-op unless `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are both set — `_get_langfuse()` returns `None` otherwise, and callers skip straight to the plain Bedrock call, so mock mode and tests are unaffected. Mock-mode triage calls (`mock_triage`) aren't traced — there's no model call to observe.
+
+Each generation records the Bedrock model ID, a role-labeled `input` matching the actual message sent to the model, `output` (the parsed triage result on success, or the fallback triage result on failure), and token usage (`input_tokens`/`output_tokens`) when the call succeeds. Failures set `level="ERROR"` with a `status_message` in addition to the fallback `output`, so error traces stay queryable rather than showing a blank result. Each call flushes explicitly (`langfuse.flush()`) before returning, since the FastAPI host can idle and a buffered batch could otherwise be lost on a cold shutdown.
 
 ## Known Limits
 
