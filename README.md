@@ -16,7 +16,7 @@ A structured triage copilot that consumes incident evidence from [api-failure-an
 ## Features
 
 - **Structured Triage:** `POST /triage` accepts an incident evidence bundle; returns JSON with hypotheses, checks, and escalation readiness.
-- **MCP Server:** the same triage logic is exposed as an MCP tool at `/mcp`, so MCP-aware clients (Claude Code, Claude Desktop, n8n, custom agents) can call it directly. See [MCP Server docs](docs/MCP_SERVER.md).
+- **MCP Server:** the same triage logic is exposed as an MCP tool at `/mcp`, so any MCP-aware client (n8n, a custom agent, etc.) can call it directly. See [MCP Server docs](docs/MCP_SERVER.md).
 - **Mock Mode:** `BEDROCK_MOCK=true` returns deterministic canned responses — works offline with no AWS credentials.
 - **Live Bedrock Mode:** `BEDROCK_MOCK=false` invokes Amazon Bedrock Runtime with validated structured output.
 
