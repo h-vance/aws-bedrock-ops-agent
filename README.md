@@ -16,12 +16,14 @@ A structured triage copilot that consumes incident evidence from [api-failure-an
 ## Features
 
 - **Structured Triage:** `POST /triage` accepts an incident evidence bundle; returns JSON with hypotheses, checks, and escalation readiness.
+- **MCP Server:** the same triage logic is exposed as an MCP tool at `/mcp`, so MCP-aware clients (Claude Code, Claude Desktop, n8n, custom agents) can call it directly. See [MCP Server docs](docs/MCP_SERVER.md).
 - **Mock Mode:** `BEDROCK_MOCK=true` returns deterministic canned responses — works offline with no AWS credentials.
 - **Live Bedrock Mode:** `BEDROCK_MOCK=false` invokes Amazon Bedrock Runtime with validated structured output.
 
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md) - system boundaries, request flow, modes, and known limits
+- [MCP Server](docs/MCP_SERVER.md) - the `/mcp` tool surface, transport, and how to connect a client
 - [Operations Runbook](docs/RUNBOOK.md) - health checks, local/Render operations, failures, and rollback
 - [Security Notes](docs/SECURITY.md) - data handling, access controls, model output safety, and review checklist
 - [Portfolio Review Guide](docs/PORTFOLIO_REVIEW.md) - suggested reviewer path, tradeoffs, and discussion topics
@@ -103,6 +105,7 @@ Note: CORS is pre-configured to accept requests from `http://localhost:8080` and
 |--------|------|-------------|
 | GET | `/health` | Returns `status`, `mode` (mock/live), and `lab_url` |
 | POST | `/triage` | Accepts evidence bundle; returns hypotheses, checks, escalation notes |
+| POST | `/mcp/` | MCP streamable-HTTP endpoint exposing the `triage_incident` tool — see [docs/MCP_SERVER.md](docs/MCP_SERVER.md) |
 
 ## Deployment
 
