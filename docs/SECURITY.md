@@ -12,7 +12,7 @@ This project is a portfolio demo, not a production incident management system. T
 
 | Surface | Current control | Production expectation |
 |---------|-----------------|------------------------|
-| Public Render app | No user authentication; mock mode only | Add auth, rate limiting, and request size limits |
+| Public Render app | No user authentication; mock mode only; per-IP rate limiting on `/triage` and `/mcp` (`RATE_LIMIT_REQUESTS` per `RATE_LIMIT_WINDOW_SECONDS`, default 20/hour) | Add auth and request size limits before enabling live mode publicly |
 | FastAPI CORS | Configurable allow-list via `CORS_ORIGINS` | Restrict to owned domains |
 | Local development | Developer AWS credentials if live mode is enabled | Use least-privilege roles and short-lived credentials |
 
@@ -31,6 +31,9 @@ No secrets should be committed to this repo. Use environment variables for runti
 - `BEDROCK_MODEL_ID`
 - `LAB_BASE_URL`
 - `CORS_ORIGINS`
+- `MCP_ALLOWED_HOSTS` / `MCP_ALLOWED_ORIGINS`
+- `RATE_LIMIT_REQUESTS` / `RATE_LIMIT_WINDOW_SECONDS`
+- `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` / `LANGFUSE_HOST` (tracing is off unless both keys are set)
 
 ## Security Review Checklist
 

@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 
 from mcp_server import streamable_http_app
+from rate_limit import RateLimitMiddleware
 from triage_core import IncidentBundle, run_triage
 
 _mcp_app = streamable_http_app()
@@ -37,6 +38,7 @@ app.add_middleware(
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization"],
 )
+app.add_middleware(RateLimitMiddleware)
 
 UVICORN_PORT = int(os.getenv("PORT", 8001))
 BEDROCK_MOCK = os.getenv("BEDROCK_MOCK", "true").lower() == "true"
