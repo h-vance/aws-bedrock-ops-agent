@@ -1,6 +1,6 @@
 # MCP Server
 
-The same triage logic behind `POST /triage` is also exposed as an MCP tool, so any MCP-aware client — Claude Code, Claude Desktop, an n8n MCP node, or a custom agent — can call it directly instead of going through a bespoke REST integration.
+The same triage logic behind `POST /triage` is also exposed as an MCP tool, so any MCP-aware client — an n8n MCP node, a custom agent, or anything else speaking the protocol — can call it directly instead of going through a bespoke REST integration.
 
 ## How it's wired
 
