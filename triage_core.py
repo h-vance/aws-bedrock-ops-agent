@@ -75,7 +75,7 @@ MOCK_RESPONSES = {
         "recommended_checks": [
             "Verify token expiry in /login response",
             "Check if /api/v1/data accepts the new token format",
-            "Inspect retry logic in client C — 4 retries suggests no backoff",
+            "Inspect retry logic in client C: 4 retries suggests no backoff",
         ],
         "escalation_ready": True,
         "customer_comms_draft": "We identified an authentication failure caused by a token rotation that invalidated active sessions. Engineering is reviewing the rollout sequence to add a grace period.",
@@ -116,7 +116,7 @@ MOCK_RESPONSES = {
             },
             {
                 "rank": 2,
-                "hypothesis": "No circuit breaker — every request hits upstream even when degraded",
+                "hypothesis": "No circuit breaker: every request hits upstream even when degraded",
                 "confidence": "medium",
                 "evidence_ids": ["tx-to-002", "tx-to-003"],
                 "check_command": "for i in $(seq 1 5); do curl -s -o /dev/null -w \"%{http_code} %{time_total}\\n\" --max-time 10 http://localhost:8000/api/v1/external-call; done",
