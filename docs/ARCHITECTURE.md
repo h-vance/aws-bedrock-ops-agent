@@ -36,7 +36,11 @@ This repo demonstrates an L2 incident triage copilot backed by Amazon Bedrock. I
 - The browser console escapes dynamic response fields before rendering to reduce XSS risk from model or API output.
 - The REST and MCP surfaces share one implementation (`triage_core.py`) so they can't drift apart, and are mounted in the same ASGI app rather than deployed as two services.
 
+## Observability
+
+`triage_core._call_bedrock` is wrapped in an OpenTelemetry span using the `gen_ai.*` semantic conventions (system, operation name, request model, token usage), exported to [Langfuse](https://langfuse.com) via its OTLP endpoint. This is a no-op unless `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are both set — with no keys configured, `opentelemetry.trace.get_tracer()` returns the library's built-in no-op tracer, so mock mode and tests are unaffected. Mock-mode triage calls (`mock_triage`) aren't traced — there's no model call to observe.
+
 ## Known Limits
 
 - The public demo is unauthenticated and should remain mock-only.
-- The app does not persist incident bundles, traces, or generated triage output.
+- The app does not persist incident bundles, traces, or generated triage output beyond what's sent to Langfuse when tracing is enabled.

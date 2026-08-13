@@ -1,11 +1,46 @@
+import base64
 import json
 import os
 from copy import deepcopy
 
+from opentelemetry import trace
 from pydantic import BaseModel, Field
 
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 BEDROCK_MODEL_ID = os.getenv("BEDROCK_MODEL_ID", "amazon.titan-text-express-v1")
+
+LANGFUSE_PUBLIC_KEY = os.getenv("LANGFUSE_PUBLIC_KEY")
+LANGFUSE_SECRET_KEY = os.getenv("LANGFUSE_SECRET_KEY")
+LANGFUSE_HOST = os.getenv("LANGFUSE_HOST", "https://us.cloud.langfuse.com")
+
+
+def _init_tracer():
+    # No-op unless both Langfuse keys are configured — get_tracer() with no
+    # provider registered returns OpenTelemetry's built-in no-op tracer, so
+    # every span/attribute call below is a safe no-op when unconfigured.
+    if not (LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY):
+        return trace.get_tracer(__name__)
+
+    from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+    auth = base64.b64encode(f"{LANGFUSE_PUBLIC_KEY}:{LANGFUSE_SECRET_KEY}".encode()).decode()
+    exporter = OTLPSpanExporter(
+        endpoint=f"{LANGFUSE_HOST}/api/public/otel/v1/traces",
+        headers={
+            "Authorization": f"Basic {auth}",
+            "x-langfuse-ingestion-version": "4",
+        },
+    )
+    provider = TracerProvider(resource=Resource.create({"service.name": "aws-bedrock-ops-agent"}))
+    provider.add_span_processor(BatchSpanProcessor(exporter))
+    trace.set_tracer_provider(provider)
+    return trace.get_tracer(__name__)
+
+
+_tracer = _init_tracer()
 
 
 class IncidentBundle(BaseModel):
@@ -146,25 +181,39 @@ def _fallback_triage(error: Exception) -> dict:
 
 
 def _call_bedrock(bundle: IncidentBundle) -> dict:
-    bedrock = _bedrock_client()
-    prompt = (
-        f"You are an L2 support engineer triaging an incident. "
-        f"Analyze this evidence and return structured hypotheses, checks, and escalation readiness. "
-        f"Incident: {bundle.summary}\n"
-        f"Timeline events: {len(bundle.timeline)}\n"
-        f"Log lines: {len(bundle.log_lines)}\n"
-        f"Request samples: {len(bundle.request_samples)}\n"
-        f"Do not invent metrics. Cite evidence trace IDs. Output JSON only."
-    )
-    try:
-        response = bedrock.converse(
-            modelId=BEDROCK_MODEL_ID,
-            messages=[{"role": "user", "content": [{"text": prompt}]}],
+    with _tracer.start_as_current_span("triage_incident") as span:
+        span.set_attribute("gen_ai.system", "aws.bedrock")
+        span.set_attribute("gen_ai.operation.name", "chat")
+        span.set_attribute("gen_ai.request.model", BEDROCK_MODEL_ID)
+        span.set_attribute("incident.id", bundle.incident_id)
+
+        bedrock = _bedrock_client()
+        prompt = (
+            f"You are an L2 support engineer triaging an incident. "
+            f"Analyze this evidence and return structured hypotheses, checks, and escalation readiness. "
+            f"Incident: {bundle.summary}\n"
+            f"Timeline events: {len(bundle.timeline)}\n"
+            f"Log lines: {len(bundle.log_lines)}\n"
+            f"Request samples: {len(bundle.request_samples)}\n"
+            f"Do not invent metrics. Cite evidence trace IDs. Output JSON only."
         )
-        text = response["output"]["message"]["content"][0]["text"]
-        return TriageResult.model_validate(json.loads(text)).model_dump()
-    except Exception as e:
-        return _fallback_triage(e)
+        try:
+            response = bedrock.converse(
+                modelId=BEDROCK_MODEL_ID,
+                messages=[{"role": "user", "content": [{"text": prompt}]}],
+            )
+            text = response["output"]["message"]["content"][0]["text"]
+            usage = response.get("usage", {})
+            if usage:
+                span.set_attribute("gen_ai.usage.input_tokens", usage.get("inputTokens", 0))
+                span.set_attribute("gen_ai.usage.output_tokens", usage.get("outputTokens", 0))
+            result = TriageResult.model_validate(json.loads(text)).model_dump()
+            span.set_attribute("triage.escalation_ready", result["escalation_ready"])
+            return result
+        except Exception as e:
+            span.record_exception(e)
+            span.set_attribute("error", True)
+            return _fallback_triage(e)
 
 
 def mock_triage(bundle: IncidentBundle) -> dict:
