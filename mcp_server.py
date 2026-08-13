@@ -9,7 +9,7 @@ BEDROCK_MOCK = os.getenv("BEDROCK_MOCK", "true").lower() == "true"
 
 # The SDK auto-enables Host/Origin allowlisting for DNS-rebinding protection, but
 # only when it thinks it's bound to localhost. Since this is mounted behind a real
-# public domain on Render, that allowlist must be configured explicitly here —
+# public domain on Render, that allowlist must be configured explicitly here,
 # otherwise every request in production 421s once the default localhost-only
 # allowlist doesn't match the deployed Host header.
 _ALLOWED_HOSTS = [

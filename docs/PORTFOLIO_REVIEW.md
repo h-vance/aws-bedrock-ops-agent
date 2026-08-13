@@ -5,7 +5,7 @@ This guide is for reviewers who want to quickly understand what the project demo
 ## What This Demonstrates
 
 - FastAPI API design for a small incident-triage service.
-- The same triage logic also exposed as an MCP tool (`/mcp`) — one implementation serving both a REST client and any MCP-aware agent, built against the current (2026-07-28) MCP spec.
+- The same triage logic also exposed as an MCP tool (`/mcp`): one implementation serving both a REST client and any MCP-aware agent, built against the current (2026-07-28) MCP spec.
 - Deterministic mock mode for reliable demos without AWS credentials.
 - Amazon Bedrock integration path with validated structured output.
 - Frontend handling for a realistic support workflow: evidence, hypotheses, checks, escalation status, and customer comms.
@@ -16,7 +16,7 @@ This guide is for reviewers who want to quickly understand what the project demo
 1. Open the live demo and run the three built-in incident scenarios.
 2. Read `triage_core.py` for the shared triage logic, then `assistant.py` (REST) and `mcp_server.py` (MCP) to see how each thin surface reuses it.
 3. Read `static/index.html` for the evidence console and escaped rendering of API output.
-4. Run the local verification commands in the README, including an MCP tool call — see [docs/MCP_SERVER.md](MCP_SERVER.md).
+4. Run the local verification commands in the README, including an MCP tool call. See [docs/MCP_SERVER.md](MCP_SERVER.md).
 
 ## Engineering Tradeoffs
 

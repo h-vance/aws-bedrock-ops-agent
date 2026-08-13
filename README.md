@@ -5,19 +5,19 @@
 [![FastAPI](https://www.shieldcn.dev/badge/FastAPI-009688.svg?variant=default&logo=FastAPI&logoColor=FFFFFF&size=xs)](https://fastapi.tiangolo.com)
 [![Python](https://www.shieldcn.dev/badge/Python-3776AB.svg?variant=default&logo=Python&logoColor=FFFFFF&size=xs)](https://python.org)
 
-> **L2 triage copilot for support engineers: ingests incident evidence bundles and returns hypotheses, checks, and escalation-ready notes — not a general chat assistant.**
+> **L2 triage copilot for support engineers: ingests incident evidence bundles and returns hypotheses, checks, and escalation-ready notes, not a general chat assistant.**
 
 Part of the [Ops Support Demo](https://aws-bedrock-ops-agent.onrender.com/) portfolio.
 
 ## Overview
 
-A structured triage copilot that consumes incident evidence bundles and returns ranked hypotheses, recommended checks, and escalation documentation. Designed for support engineers who need AI assistance grounded in actual incident data — not open-ended conversation.
+A structured triage copilot that consumes incident evidence bundles and returns ranked hypotheses, recommended checks, and escalation documentation. Designed for support engineers who need AI assistance grounded in actual incident data, not open-ended conversation.
 
 ## Features
 
 - **Structured Triage:** `POST /triage` accepts an incident evidence bundle; returns JSON with hypotheses, checks, and escalation readiness.
 - **MCP Server:** the same triage logic is exposed as an MCP tool at `/mcp`, so any MCP-aware client (n8n, a custom agent, etc.) can call it directly. See [MCP Server docs](docs/MCP_SERVER.md).
-- **Mock Mode:** `BEDROCK_MOCK=true` returns deterministic canned responses — works offline with no AWS credentials.
+- **Mock Mode:** `BEDROCK_MOCK=true` returns deterministic canned responses that work offline with no AWS credentials.
 - **Live Bedrock Mode:** `BEDROCK_MOCK=false` invokes Amazon Bedrock Runtime with validated structured output.
 
 ## Documentation
@@ -43,7 +43,7 @@ BEDROCK_MOCK=true python assistant.py
 
 ### POST /triage
 
-**Request** — incident evidence bundle:
+**Request:** incident evidence bundle
 
 ```json
 {
@@ -62,7 +62,7 @@ BEDROCK_MOCK=true python assistant.py
 }
 ```
 
-**Response** — structured triage output:
+**Response:** structured triage output
 
 ```json
 {
@@ -101,7 +101,7 @@ BEDROCK_MOCK=true python assistant.py
 | `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` | unset | Enables OTel tracing of Bedrock calls to Langfuse when both are set; no-op otherwise |
 | `LANGFUSE_HOST` | `https://us.cloud.langfuse.com` | Langfuse region endpoint |
 
-Note: CORS is pre-configured to accept requests from `http://localhost:8080` and `http://127.0.0.1:8080` (the debug console). For production, set `CORS_ORIGINS` to the deployed browser origin. `/mcp` has its own separate Host/Origin allowlist — see [docs/MCP_SERVER.md](docs/MCP_SERVER.md).
+Note: CORS is pre-configured to accept requests from `http://localhost:8080` and `http://127.0.0.1:8080` (the debug console). For production, set `CORS_ORIGINS` to the deployed browser origin. `/mcp` has its own separate Host/Origin allowlist. See [docs/MCP_SERVER.md](docs/MCP_SERVER.md).
 
 ## Endpoints
 
@@ -109,7 +109,7 @@ Note: CORS is pre-configured to accept requests from `http://localhost:8080` and
 |--------|------|-------------|
 | GET | `/health` | Returns `status`, `mode` (mock/live), and `lab_url` |
 | POST | `/triage` | Accepts evidence bundle; returns hypotheses, checks, escalation notes |
-| POST | `/mcp/` | MCP streamable-HTTP endpoint exposing the `triage_incident` tool — see [docs/MCP_SERVER.md](docs/MCP_SERVER.md) |
+| POST | `/mcp/` | MCP streamable-HTTP endpoint exposing the `triage_incident` tool. See [docs/MCP_SERVER.md](docs/MCP_SERVER.md) |
 
 ## Deployment
 
@@ -146,9 +146,9 @@ Use least-privilege AWS credentials for live Bedrock mode. Keep the public demo 
 
 ## Related
 
-- [n8n-workflow-as-code](https://github.com/h-vance/n8n-workflow-as-code) — n8n workflows that call this repo's `/mcp` tool over live JSON-RPC
-- [postman-tse-incident-lab](https://github.com/h-vance/postman-tse-incident-lab) — reproducible API incidents that produce the kind of evidence `/triage` consumes
-- [incident-postmortems](https://github.com/h-vance/incident-postmortems) — where the escalation notes end up as written RCAs
+- [n8n-workflow-as-code](https://github.com/h-vance/n8n-workflow-as-code): n8n workflows that call this repo's `/mcp` tool over live JSON-RPC
+- [postman-tse-incident-lab](https://github.com/h-vance/postman-tse-incident-lab): reproducible API incidents that produce the kind of evidence `/triage` consumes
+- [incident-postmortems](https://github.com/h-vance/incident-postmortems): where the escalation notes end up as written RCAs
 
 ## License
 

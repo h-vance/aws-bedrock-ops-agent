@@ -1,6 +1,6 @@
 # MCP Server
 
-The same triage logic behind `POST /triage` is also exposed as an MCP tool, so any MCP-aware client — an n8n MCP node, a custom agent, or anything else speaking the protocol — can call it directly instead of going through a bespoke REST integration.
+The same triage logic behind `POST /triage` is also exposed as an MCP tool, so any MCP-aware client (an n8n MCP node, a custom agent, or anything else speaking the protocol) can call it directly instead of going through a bespoke REST integration.
 
 ## How it's wired
 
@@ -8,7 +8,7 @@ The same triage logic behind `POST /triage` is also exposed as an MCP tool, so a
 - `mcp_server.py` defines one tool, `triage_incident`, on top of `triage_core`, using the official `mcp` Python SDK's `MCPServer`.
 - `assistant.py` mounts the MCP server's ASGI app at `/mcp` inside the existing FastAPI app, so both the REST API and the MCP tool are served from one process and one deployment.
 
-This means the REST and MCP surfaces can never drift apart — there is exactly one implementation of the triage logic underneath both.
+This means the REST and MCP surfaces can never drift apart: there is exactly one implementation of the triage logic underneath both.
 
 ## Transport
 
@@ -20,7 +20,7 @@ Local (mock mode):
 ```bash
 BEDROCK_MOCK=true python assistant.py
 ```
-Then point an MCP client at `http://localhost:8001/mcp/` (streamable HTTP; note the trailing slash — a bare `/mcp` 307-redirects there).
+Then point an MCP client at `http://localhost:8001/mcp/` (streamable HTTP; note the trailing slash, since a bare `/mcp` 307-redirects there).
 
 Deployed:
 ```
@@ -36,7 +36,7 @@ The SDK's DNS-rebinding protection validates the `Host`/`Origin` headers on ever
 | `MCP_ALLOWED_HOSTS` | `127.0.0.1:*,localhost:*,[::1]:*` | Allowed `Host` header values |
 | `MCP_ALLOWED_ORIGINS` | `http://127.0.0.1:*,http://localhost:*,http://[::1]:*` | Allowed `Origin` header values |
 
-The deployed Render service sets `MCP_ALLOWED_HOSTS` to include its own public hostname — without this, every request to `/mcp` in production would 421 (the SDK's rebinding protection only auto-allows localhost by default).
+The deployed Render service sets `MCP_ALLOWED_HOSTS` to include its own public hostname. Without this, every request to `/mcp` in production would 421 (the SDK's rebinding protection only auto-allows localhost by default).
 
 ## The tool
 

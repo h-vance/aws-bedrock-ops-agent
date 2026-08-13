@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AWS Bedrock Ops Agent — L2 Triage Copilot</title>
+<title>AWS Bedrock Ops Agent: L2 Triage Copilot</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -205,7 +205,7 @@
       <h2>AWS Bedrock Ops Agent</h2>
       <p>
         A structured L2 triage copilot for support engineers. Ingest incident evidence and get ranked hypotheses,
-        recommended checks, and escalation-ready customer communications — grounded in data, not general chat.
+        recommended checks, and escalation-ready customer communications, grounded in data, not general chat.
       </p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
         <span class="shortcut">1. Select an incident</span>
@@ -235,12 +235,12 @@ const INCIDENTS = [
 const EVIDENCE = {
   "auth": {
     "incident_id": "INC-001",
-    "summary": "Auth cascade after token rotation — missing Bearer token triggers 401, retry with stale token yields 403 across downstream services",
+    "summary": "Auth cascade after token rotation: missing Bearer token triggers 401, retry with stale token yields 403 across downstream services",
     "timeline": [
       {"ts": "2025-01-15T09:58:00Z", "event": "Scheduled token rotation deployed", "trace_id": "n/a"},
       {"ts": "2025-01-15T09:59:00Z", "event": "Client A active session invalidated", "trace_id": "tx-001"},
-      {"ts": "2025-01-15T09:59:02Z", "event": "GET /api/v1/data — no Authorization header (401)", "trace_id": "tx-001"},
-      {"ts": "2025-01-15T09:59:05Z", "event": "POST /login with cached credentials — success, new token issued", "trace_id": "tx-002"},
+      {"ts": "2025-01-15T09:59:02Z", "event": "GET /api/v1/data with no Authorization header (401)", "trace_id": "tx-001"},
+      {"ts": "2025-01-15T09:59:05Z", "event": "POST /login with cached credentials: success, new token issued", "trace_id": "tx-002"},
       {"ts": "2025-01-15T09:59:08Z", "event": "GET /api/v1/data with new token (200)", "trace_id": "tx-002"},
       {"ts": "2025-01-15T09:59:10Z", "event": "Client B retries with old token (403)", "trace_id": "tx-003"},
       {"ts": "2025-01-15T09:59:15Z", "event": "Client C receives 401, retries 4 times, rate-limited", "trace_id": "tx-004"}
@@ -263,13 +263,13 @@ const EVIDENCE = {
   },
   "webhook": {
     "incident_id": "INC-002",
-    "summary": "Webhook signature validation failure — partner POSTs order.shipped event with incorrect HMAC-SHA256 signature",
+    "summary": "Webhook signature validation failure: partner POSTs order.shipped event with incorrect HMAC-SHA256 signature",
     "timeline": [
       {"ts": "2025-02-10T14:30:00Z", "event": "Partner 'AcmeCorp' sends order.shipped webhook", "trace_id": "tx-wh-001"},
       {"ts": "2025-02-10T14:30:01Z", "event": "Webhook received: X-Signature header missing", "trace_id": "tx-wh-001"},
-      {"ts": "2025-02-10T14:30:02Z", "event": "Signature validation: FAILED — expected sha256 HMAC", "trace_id": "tx-wh-001"},
+      {"ts": "2025-02-10T14:30:02Z", "event": "Signature validation: FAILED, expected sha256 HMAC", "trace_id": "tx-wh-001"},
       {"ts": "2025-02-10T14:30:03Z", "event": "Webhook rejected, 400 returned to partner", "trace_id": "tx-wh-001"},
-      {"ts": "2025-02-10T14:31:00Z", "event": "Partner retries with hash instead of HMAC — fails again", "trace_id": "tx-wh-002"},
+      {"ts": "2025-02-10T14:31:00Z", "event": "Partner retries with hash instead of HMAC, fails again", "trace_id": "tx-wh-002"},
       {"ts": "2025-02-10T14:35:00Z", "event": "On-call paged: 'webhook delivery failing for AcmeCorp'", "trace_id": "n/a"}
     ],
     "log_lines": [
@@ -286,14 +286,14 @@ const EVIDENCE = {
   },
   "timeout": {
     "incident_id": "INC-003",
-    "summary": "Upstream API timeout — client times out at 30s while server continues processing for 45s, causing orphaned state",
+    "summary": "Upstream API timeout: client times out at 30s while server continues processing for 45s, causing orphaned state",
     "timeline": [
       {"ts": "2025-03-05T22:15:00Z", "event": "Client A calls GET /api/v1/external-call", "trace_id": "tx-to-001"},
       {"ts": "2025-03-05T22:15:05Z", "event": "Server accepts request, begins upstream processing", "trace_id": "tx-to-001"},
       {"ts": "2025-03-05T22:15:35Z", "event": "Client A hits 30s timeout, closes connection", "trace_id": "tx-to-001"},
       {"ts": "2025-03-05T22:15:50Z", "event": "Server finishes processing (45s), cannot write to closed connection", "trace_id": "tx-to-001"},
       {"ts": "2025-03-05T22:15:51Z", "event": "Server logs 'client disconnected (broken pipe)'", "trace_id": "tx-to-001"},
-      {"ts": "2025-03-05T22:16:00Z", "event": "Client B same request — also times out", "trace_id": "tx-to-002"}
+      {"ts": "2025-03-05T22:16:00Z", "event": "Client B same request, also times out", "trace_id": "tx-to-002"}
     ],
     "log_lines": [
       {"level": "WARNING", "message": "External call: simulating 15s upstream delay", "trace_id": "tx-to-001"},
