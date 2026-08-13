@@ -210,7 +210,7 @@ def _call_bedrock(bundle: IncidentBundle) -> dict:
             result = TriageResult.model_validate(json.loads(text)).model_dump()
             span.set_attribute("triage.escalation_ready", result["escalation_ready"])
             return result
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - deliberate catch-all fallback boundary for any Bedrock/parsing failure
             span.record_exception(e)
             span.set_attribute("error", True)
             return _fallback_triage(e)

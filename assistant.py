@@ -40,7 +40,7 @@ app.add_middleware(
 )
 app.add_middleware(RateLimitMiddleware)
 
-UVICORN_PORT = int(os.getenv("PORT", 8001))
+UVICORN_PORT = int(os.getenv("PORT", "8001"))
 BEDROCK_MOCK = os.getenv("BEDROCK_MOCK", "true").lower() == "true"
 LAB_BASE_URL = os.getenv("LAB_BASE_URL", "http://failure-lab:8000")
 STATIC_INDEX = Path(__file__).with_name("static") / "index.html"
