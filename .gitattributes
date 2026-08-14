@@ -1,0 +1,4 @@
+# The demo page is a single self-contained file that happens to be larger than
+# all the Python in the repo, which made GitHub label this a HTML project. It is
+# our own code, not vendored, so exclude it from language stats only.
+static/*.html linguist-detectable=false
