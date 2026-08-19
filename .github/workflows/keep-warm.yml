@@ -1,0 +1,20 @@
+# The live demo runs on Render's free tier, which spins the service down
+# after 15 minutes without traffic. A cold visitor then waits about 30
+# seconds for the first byte, which is longer than anyone following a
+# "live demo" link will wait. Pinging the health endpoint keeps the
+# container resident, so the first click answers in under a second.
+name: Keep warm
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping the deployed service
+        run: curl -sf --max-time 90 https://aws-bedrock-ops-agent.onrender.com/health
