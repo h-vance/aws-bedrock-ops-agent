@@ -3,6 +3,10 @@
 # seconds for the first byte, which is longer than anyone following a
 # "live demo" link will wait. Pinging the health endpoint keeps the
 # container resident, so the first click answers in under a second.
+#
+# Render restarts the container from time to time, and a single ping that
+# lands mid-restart used to fail the whole run. Three attempts spread over
+# a minute tell a restart apart from a service that is genuinely down.
 name: Keep warm
 
 on:
@@ -17,4 +21,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping the deployed service
-        run: curl -sf --max-time 90 https://aws-bedrock-ops-agent.onrender.com/health
+        env:
+          HEALTH_URL: https://aws-bedrock-ops-agent.onrender.com/health
+        run: |
+          for attempt in 1 2 3; do
+            if status=$(curl -sfS --max-time 90 -o /dev/null -w '%{http_code}' "$HEALTH_URL"); then
+              echo "Attempt $attempt: HTTP $status, the service is warm."
+              exit 0
+            fi
+            echo "Attempt $attempt did not get a healthy response."
+            if [ "$attempt" -lt 3 ]; then
+              sleep 30
+            fi
+          done
+          echo "No healthy response after 3 attempts over one minute."
+          exit 1
