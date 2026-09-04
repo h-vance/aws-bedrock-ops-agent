@@ -1,0 +1,66 @@
+{
+  "_note": "Guideline validation on data type DT. Doc lists DT as YYMMDD or CCYYMMDD. The value here is MMDDYYYY with dashes, which looks like an ERP export default.",
+  "id": "0192f3a1-0000-7000-8000-000000000003",
+  "direction": "in",
+  "stream": "live",
+  "ediTransactionType": "850_PURCHASE_ORDER",
+  "senderId": "RETAILER01",
+  "receiverId": "ACMEFOODS",
+  "validationStatus": "INVALID",
+  "deliveryStatus": "PENDING",
+  "acknowledgmentStatus": "NOT_ACKNOWLEDGED",
+  "errors": [
+    {
+      "path": "/dateTimeReference/0/date",
+      "code": "DATA_TYPE_DT",
+      "message": "Element DTM02 value \"08-28-2026\" does not match data type DT (CCYYMMDD)",
+      "source": "guideline"
+    }
+  ],
+  "snippet": "{\"transactionType\": \"850\", \"beginningSegmentForPurchaseOrder\": [{\"purchaseOrderNumber\": \"PO-88215\", \"date\": \"20260828\"}], \"dateTimeReference\": [{\"dateTimeQualifier\": \"002\", \"date\": \"08-28-2026\"}]}",
+  "customer_note": "We upgraded our ERP over the weekend. Since then every PO to Acme is Invalid.",
+  "context": {
+    "erp_change_at": "2026-08-30T02:00:00Z",
+    "invalid_count_24h": 41
+  },
+  "mock_result": {
+    "hypotheses": [
+      {
+        "rank": 1,
+        "confidence": "high",
+        "hypothesis": "The ERP upgrade changed the date export to MM-DD-YYYY; DTM02 must be CCYYMMDD per data type DT",
+        "evidence": [
+          "errors[0].message",
+          "context.erp_change_at",
+          "context.invalid_count_24h"
+        ],
+        "check": "Open ?tab=errors on one Invalid PO and confirm all 41 fail on DTM02 only"
+      },
+      {
+        "rank": 2,
+        "confidence": "medium",
+        "hypothesis": "An existing FORMATDATE rule on DTM02 now runs on a value it was not written for and produces the dashed form",
+        "evidence": [
+          "errors[0].path"
+        ],
+        "check": "List rules on inbound 850 from RETAILER01 and look for FORMATDATE on dateTimeReference"
+      },
+      {
+        "rank": 3,
+        "confidence": "low",
+        "hypothesis": "BEG05 still validates because it comes from a different export field, so the change is limited to DTM",
+        "evidence": [
+          "snippet.beginningSegmentForPurchaseOrder[0].date"
+        ],
+        "check": "Confirm no other element fails across the 41 transactions"
+      }
+    ],
+    "customer_reply": "Since your ERP upgrade on Saturday, the delivery date in your POs arrives as 08-28-2026. Retailer One's guideline requires CCYYMMDD, so 20260828. That is the only failing element on all 41 transactions. You can fix the export format, or we can add a rule that converts the date on the way in so nothing changes on your side. Which do you prefer?",
+    "ticket_two": {
+      "kind": "rule",
+      "effort": "S",
+      "title": "FORMATDATE on DTM02 for inbound 850 from RETAILER01",
+      "why": "One rule converts MM-DD-YYYY to CCYYMMDD before validation and clears all 41 without an ERP change. Wrap it in IFERROR so already-correct dates pass through."
+    }
+  }
+}

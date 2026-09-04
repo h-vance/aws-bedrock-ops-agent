@@ -104,6 +104,15 @@
     border: 1px solid #30363d; background: #161b22; color: #c9d1d9; cursor: pointer;
   }
   .escalation-box .copy-btn:hover { background: #1c2128; }
+  .escalation-box.reply { border-color: #2d6a40; background: #0f1f15; }
+  .escalation-box.reply .label { color: #3fb950; }
+  .escalation-box.ticket { border-color: #2a4a7a; background: #0f1520; }
+  .escalation-box.ticket .label { color: #58a6ff; }
+  .escalation-box .ticket-title { font-size: 14px; color: #c9d1d9; margin-bottom: 6px; }
+  .check-note { font-size: 12px; background: #040608; border: 1px solid #1e2328; border-radius: 6px; padding: 10px 14px; color: #c9d1d9; line-height: 1.5; }
+  .status-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .snippet { font-size: 11px; background: #040608; border: 1px solid #1e2328; border-radius: 6px; padding: 12px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; color: #8b949e; font-family: monospace; }
+  .customer-note { font-size: 13px; color: #c9d1d9; line-height: 1.5; font-style: italic; padding: 12px 14px; border-left: 3px solid #30363d; background: #0d1013; }
 
   /* Loading */
   .loading { display: flex; align-items: center; gap: 8px; color: #6e7681; font-size: 13px; padding: 40px; justify-content: center; }
@@ -188,8 +197,10 @@
   <div class="sidebar">
     <div class="sidebar-label">Sample Incidents</div>
     <div id="incident-list"></div>
+    <div class="sidebar-label" style="margin-top:20px">EDI Transactions</div>
+    <div id="edi-list"></div>
     <div style="font-size:10px;color:#484f58;padding:8px;margin-top:8px;border-top:1px solid #1e2328">
-      Click an incident to run the copilot
+      Click an item to run the copilot
     </div>
   </div>
   <div class="main" id="main-content">
@@ -199,6 +210,10 @@
       <p>
         A structured L2 triage copilot for support engineers. Ingest incident evidence and get ranked hypotheses,
         recommended checks, and escalation-ready customer communications, grounded in data, not general chat.
+      </p>
+      <p>
+        The EDI list runs the same pattern on failed EDI transactions: classification, ranked causes,
+        a customer reply, and the follow-up that prevents the next ticket.
       </p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
         <span class="shortcut">1. Select an incident</span>
@@ -304,6 +319,8 @@ const EVIDENCE = {
 let activeId = null;
 let activeTab = "triage";
 let triageCache = {};
+let EDI = [];
+let ediCache = {};
 
 function dotClass(event) {
   const e = String(event ?? "").toLowerCase();
@@ -327,6 +344,14 @@ function renderSidebar() {
       <div class="incident-summary">${escapeHtml(inc.summary)}</div>
       <div class="incident-pattern">pattern: ${escapeHtml(inc.pattern)}</div>
       <div class="incident-severity ${inc.severity === 'high' ? 'sev-high' : 'sev-mid'}">${escapeHtml(inc.severity.toUpperCase())} severity</div>
+    </div>
+  `).join("");
+  const ediList = document.getElementById("edi-list");
+  ediList.innerHTML = EDI.map(tx => `
+    <div class="incident-card ${activeId === tx.id ? 'active' : ''}" onclick="selectEdi('${escapeHtml(tx.id)}')">
+      <div class="incident-id">${escapeHtml(tx.ediTransactionType)}</div>
+      <div class="incident-summary">${escapeHtml(String(tx.name ?? "").replace(/_/g, " "))}</div>
+      <div class="incident-pattern">${escapeHtml(tx.validationStatus ?? "NOT_CREATED")} · ${escapeHtml(tx.deliveryStatus)} · ${escapeHtml(tx.acknowledgmentStatus)}</div>
     </div>
   `).join("");
 }
@@ -471,8 +496,8 @@ function renderDetail(inc, data, bundle) {
     </div>
 
     <div class="detail-tabs">
-      <div class="detail-tab ${activeTab === 'triage' ? 'active' : ''}" onclick="switchTab('triage')">Triage</div>
-      <div class="detail-tab ${activeTab === 'evidence' ? 'active' : ''}" onclick="switchTab('evidence')">Evidence</div>
+      <div class="detail-tab ${activeTab === 'triage' ? 'active' : ''}" data-tab="triage" onclick="switchTab('triage')">Triage</div>
+      <div class="detail-tab ${activeTab === 'evidence' ? 'active' : ''}" data-tab="evidence" onclick="switchTab('evidence')">Evidence</div>
     </div>
 
     <div id="triage-panel" style="display:${activeTab === 'triage' ? 'block' : 'none'}">
@@ -499,7 +524,7 @@ function showError(id) {
       <div class="error-state">
         <div class="icon">⚠</div>
         <p>Failed to reach triage endpoint</p>
-        <button onclick="selectIncident(activeId)">Retry</button>
+        <button onclick="(EDI.some(t => t.id === activeId) ? selectEdi : selectIncident)(activeId)">Retry</button>
       </div>
   `;
 }
@@ -512,7 +537,142 @@ function switchTab(tab) {
   const tabs = document.querySelectorAll(".detail-tab");
   triage.style.display = tab === "triage" ? "block" : "none";
   evidence.style.display = tab === "evidence" ? "block" : "none";
-  tabs.forEach(t => t.classList.toggle("active", t.textContent.toLowerCase().includes(tab)));
+  tabs.forEach(t => t.classList.toggle("active", t.dataset.tab === tab));
+}
+
+function renderEdiTriageTab(data) {
+  const hypotheses = asArray(data.hypotheses);
+  const t = data.ticket_two || {};
+  return `
+    <div class="status-row">
+      <span class="evidence-tag">tier: ${escapeHtml(data.tier)}</span>
+      <span class="evidence-tag">classification: ${escapeHtml(data.classification)}</span>
+      <span class="evidence-tag">mode: ${escapeHtml(data.mode)}</span>
+    </div>
+
+    <div class="section-title">Hypotheses (${hypotheses.length})</div>
+    ${hypotheses.map(h => `
+      <div class="hypothesis">
+        <div class="hypothesis-header">
+          <span class="hypothesis-rank">Hypothesis #${escapeHtml(h.rank)}</span>
+          <span class="confidence ${safeToken(h.confidence, ["high", "medium", "low"], "low")}">${escapeHtml(h.confidence)}</span>
+        </div>
+        <div class="hypothesis-text">${escapeHtml(h.hypothesis)}</div>
+        <div class="evidence-ids">
+          ${asArray(h.evidence).map(e => `<span class="evidence-tag">${escapeHtml(e)}</span>`).join("")}
+        </div>
+        ${h.check ? `<div class="check-note">${escapeHtml(h.check)}</div>` : ""}
+      </div>
+    `).join("")}
+
+    <div class="escalation-box reply">
+      <div class="label">Customer reply</div>
+      <div class="comms">${escapeHtml(data.customer_reply)}</div>
+      <button class="copy-btn" onclick="copyComms(this)">Copy to Clipboard</button>
+    </div>
+
+    <div class="escalation-box ticket">
+      <div class="label">Ticket two: ${escapeHtml(t.kind)}, effort ${escapeHtml(t.effort)}</div>
+      <div class="ticket-title">${escapeHtml(t.title)}</div>
+      <div class="comms">${escapeHtml(t.why)}</div>
+    </div>
+
+    <details class="api-response">
+      <summary>Copilot JSON Response</summary>
+      <pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre>
+    </details>
+  `;
+}
+
+function renderEdiTransactionTab(tx) {
+  const errors = asArray(tx.errors);
+  return `
+    <div class="evidence-section">
+      <div class="section-title">Statuses</div>
+      <div class="status-row">
+        <span class="evidence-tag">validationStatus: ${escapeHtml(tx.validationStatus ?? "null (not created)")}</span>
+        <span class="evidence-tag">deliveryStatus: ${escapeHtml(tx.deliveryStatus)}</span>
+        <span class="evidence-tag">acknowledgmentStatus: ${escapeHtml(tx.acknowledgmentStatus)}</span>
+        <span class="evidence-tag">${escapeHtml(tx.direction)}/${escapeHtml(tx.stream)}</span>
+        <span class="evidence-tag">${escapeHtml(tx.senderId)} → ${escapeHtml(tx.receiverId)}</span>
+      </div>
+    </div>
+    <div class="evidence-section">
+      <div class="section-title">Customer Note</div>
+      <div class="customer-note">${escapeHtml(tx.customer_note)}</div>
+    </div>
+    <div class="evidence-section">
+      <div class="section-title">Errors (${errors.length})</div>
+      ${errors.length === 0 ? "<p style='color:#6e7681;font-size:13px'>No errors reported</p>" : errors.map(e => `
+        <div class="log-entry ERROR">
+          <span style="color:#6e7681">[${escapeHtml(e.source)}]</span> ${escapeHtml(e.message)}
+          <span style="color:#484f58">(${escapeHtml(e.path)}${e.code ? ", " + escapeHtml(e.code) : ""})</span>
+        </div>
+      `).join("")}
+    </div>
+    <div class="evidence-section">
+      <div class="section-title">Payload Snippet</div>
+      <div class="snippet">${escapeHtml(tx.snippet)}</div>
+    </div>
+    <div class="evidence-section">
+      <div class="section-title">Context</div>
+      <pre class="snippet">${escapeHtml(JSON.stringify(tx.context ?? {}, null, 2))}</pre>
+    </div>
+    ${tx._note ? `<div class="evidence-section"><div class="section-title">Fixture Note</div><p style="font-size:12px;color:#8b949e;line-height:1.5">${escapeHtml(tx._note)}</p></div>` : ""}
+  `;
+}
+
+function renderEdiDetail(tx, data) {
+  const el = document.getElementById("detail-view");
+  el.innerHTML = `
+    <div class="detail-header">
+      <div class="id">${escapeHtml(tx.ediTransactionType)} / ${escapeHtml(data.classification)}</div>
+      <h2>${escapeHtml(String(tx.name ?? "").replace(/_/g, " "))}</h2>
+      <div class="summary">${escapeHtml(tx.customer_note)}</div>
+    </div>
+
+    <div class="detail-tabs">
+      <div class="detail-tab ${activeTab === 'triage' ? 'active' : ''}" data-tab="triage" onclick="switchTab('triage')">Triage</div>
+      <div class="detail-tab ${activeTab === 'evidence' ? 'active' : ''}" data-tab="evidence" onclick="switchTab('evidence')">Transaction</div>
+    </div>
+
+    <div id="triage-panel" style="display:${activeTab === 'triage' ? 'block' : 'none'}">
+      ${renderEdiTriageTab(data)}
+    </div>
+    <div id="evidence-panel" style="display:${activeTab === 'evidence' ? 'block' : 'none'}">
+      ${renderEdiTransactionTab(tx)}
+    </div>
+  `;
+  document.getElementById("empty-state").style.display = "none";
+  el.classList.add("active");
+}
+
+async function selectEdi(id) {
+  activeId = id;
+  activeTab = "triage";
+  renderSidebar();
+  const tx = EDI.find(t => t.id === id);
+  if (!tx) return;
+
+  if (ediCache[id]) {
+    renderEdiDetail(tx, ediCache[id]);
+    return;
+  }
+
+  showLoading();
+  try {
+    const res = await fetch("/triage/edi", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(tx)
+    });
+    if (!res.ok) throw new Error(`edi triage failed: ${res.status}`);
+    const data = await res.json();
+    ediCache[id] = data;
+    renderEdiDetail(tx, data);
+  } catch {
+    showError(id);
+  }
 }
 
 async function selectIncident(id) {
@@ -558,6 +718,10 @@ fetch("/health").then(r => r.json()).then(d => {
 });
 
 renderSidebar();
+fetch("/fixtures/edi").then(r => r.json()).then(d => {
+  EDI = asArray(d);
+  renderSidebar();
+}).catch(() => {});
 </script>
 </body>
 </html>

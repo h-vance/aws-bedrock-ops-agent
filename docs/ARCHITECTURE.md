@@ -7,6 +7,7 @@ This repo demonstrates an L2 incident triage copilot backed by Amazon Bedrock. I
 | Component | Responsibility | Runtime |
 |-----------|----------------|---------|
 | `triage_core.py` | Shared triage logic (models, mock responses, Bedrock call), no web framework dependency | Imported by both surfaces below |
+| `edi_triage.py` | Same pattern for failed EDI transactions: deterministic tier and classification, then the model for hypotheses, reply, and ticket-two action. Reuses the Bedrock client from `triage_core.py`. See [EDI_TRIAGE.md](EDI_TRIAGE.md) | Imported by both surfaces below, plus a CLI |
 | FastAPI app (`assistant.py`) | Serves the triage REST API, health check, and static demo console | Render, Docker, local Python |
 | MCP server (`mcp_server.py`) | Exposes the same triage logic as an MCP tool, mounted at `/mcp` inside the FastAPI app | Same process as the FastAPI app |
 | Static console | Lets reviewers run curated incident bundles and inspect triage output | Browser |
@@ -21,6 +22,7 @@ This repo demonstrates an L2 incident triage copilot backed by Amazon Bedrock. I
 5. In live mode, the app sends a constrained prompt to Bedrock, validates the model response, and falls back to a stable error shape if parsing or validation fails.
 6. The console renders hypotheses, checks, escalation readiness, and the raw JSON response.
 7. Alternatively, an MCP client calls the `triage_incident` tool at `/mcp`: same underlying logic, no REST integration needed. See [docs/MCP_SERVER.md](MCP_SERVER.md).
+8. `POST /triage/edi` and the `triage_edi_transaction` tool follow the same mock/live split for EDI transaction failures, with fixtures under `fixtures/` and a CLI in `edi_triage.py`. The console loads those fixtures from `GET /fixtures/edi` and lists them under "EDI Transactions".
 
 ## Operating Modes
 

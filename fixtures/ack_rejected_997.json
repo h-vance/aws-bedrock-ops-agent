@@ -1,0 +1,58 @@
+{
+  "_note": "Acknowledgment REJECTED by the receiver's 997. The errors[] entry is verbatim from the acknowledgment API example in the docs.",
+  "id": "0192f3a1-0000-7000-8000-000000000008",
+  "direction": "out",
+  "stream": "live",
+  "ediTransactionType": "850_PURCHASE_ORDER",
+  "senderId": "RETAILER01",
+  "receiverId": "ACMEFOODS",
+  "validationStatus": "VALID",
+  "deliveryStatus": "DELIVERED",
+  "acknowledgmentStatus": "REJECTED",
+  "errors": [
+    {
+      "path": "/message",
+      "code": "00",
+      "message": "Purchase order references an unknown ship-to location",
+      "source": "ack"
+    }
+  ],
+  "snippet": "{\"transactionType\": \"850\", \"beginningSegmentForPurchaseOrder\": [{\"purchaseOrderNumber\": \"PO-88220\"}], \"partyIdentification\": [{\"entityIdentifierCode\": \"ST\", \"identificationCodeQualifier\": \"92\", \"identificationCode\": \"DC-0417\"}]}",
+  "customer_note": "Orderful shows Valid and Delivered but Acme rejected it. Whose problem is this?",
+  "context": {
+    "ship_to_code": "DC-0417",
+    "ship_to_opened_at": "2026-08-25",
+    "partner_location_list_updated_at": "2026-07-01"
+  },
+  "mock_result": {
+    "hypotheses": [
+      {
+        "rank": 1,
+        "confidence": "high",
+        "hypothesis": "Ship-to DC-0417 opened on August 25 and the partner's location master was last updated July 1, so their backend rejects the unknown location",
+        "evidence": [
+          "errors[0].message",
+          "context.ship_to_opened_at",
+          "context.partner_location_list_updated_at"
+        ],
+        "check": "Ask Acme Foods whether DC-0417 exists in their customer location master"
+      },
+      {
+        "rank": 2,
+        "confidence": "low",
+        "hypothesis": "The N104 qualifier 92 is not what this partner expects for ship-to codes",
+        "evidence": [
+          "snippet.partyIdentification[0].identificationCodeQualifier"
+        ],
+        "check": "Compare N103 on a previously accepted PO to a different ship-to"
+      }
+    ],
+    "customer_reply": "The PO reached Acme Foods, which is why it shows Delivered. Their system then rejected it because it does not recognize ship-to DC-0417, which you opened on August 25. This is a setup gap on Acme's side, not a formatting problem. Once they add DC-0417, resend the PO and it will be accepted. We are happy to contact their EDI team with you.",
+    "ticket_two": {
+      "kind": "rule",
+      "effort": "M",
+      "title": "Validate ship-to codes against the partner's location list before sending",
+      "why": "A lookup table of accepted ship-to codes per partner, checked by a rule on outbound 850, turns a next-day 997 rejection into an immediate validation error the customer can fix."
+    }
+  }
+}

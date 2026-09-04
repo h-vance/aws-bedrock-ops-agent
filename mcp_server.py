@@ -3,6 +3,7 @@ import os
 from mcp.server.mcpserver import MCPServer
 from mcp.server.transport_security import TransportSecuritySettings
 
+from edi_triage import EdiTriageResult, FailedTransaction, run_edi_triage
 from triage_core import IncidentBundle, TriageResult, run_triage
 
 BEDROCK_MOCK = os.getenv("BEDROCK_MOCK", "true").lower() == "true"
@@ -34,6 +35,13 @@ class TriageToolResult(TriageResult):
     mode: str
 
 
+class EdiTriageToolResult(EdiTriageResult):
+    transaction_id: str
+    tier: str
+    classification: str
+    mode: str
+
+
 mcp_server = MCPServer(
     name="bedrock-ops-triage",
     title="Bedrock Ops Triage",
@@ -48,6 +56,12 @@ mcp_server = MCPServer(
 async def triage_incident(bundle: IncidentBundle) -> TriageToolResult:
     """Analyze an incident evidence bundle and return structured triage output."""
     return TriageToolResult.model_validate(run_triage(bundle, mock=BEDROCK_MOCK))
+
+
+@mcp_server.tool()
+async def triage_edi_transaction(tx: FailedTransaction) -> EdiTriageToolResult:
+    """Classify a failed EDI transaction, rank causes, draft the reply, propose the ticket-two fix."""
+    return EdiTriageToolResult.model_validate(run_edi_triage(tx, mock=BEDROCK_MOCK))
 
 
 def streamable_http_app():

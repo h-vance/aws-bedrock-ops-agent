@@ -1,0 +1,59 @@
+{
+  "_note": "Delivery FAILED on AS2. Message text is verbatim from the as2-troubleshooting page. Retry count follows the 3-attempt rule in transaction-success-and-failure.",
+  "id": "0192f3a1-0000-7000-8000-000000000007",
+  "direction": "out",
+  "stream": "live",
+  "ediTransactionType": "856_SHIP_NOTICE",
+  "senderId": "ACMEFOODS",
+  "receiverId": "RETAILER01",
+  "validationStatus": "VALID",
+  "deliveryStatus": "FAILED",
+  "acknowledgmentStatus": "NOT_ACKNOWLEDGED",
+  "errors": [
+    {
+      "path": "/delivery",
+      "code": "MDN_ERROR",
+      "message": "Received an MDN with errors: The signature is unverified",
+      "source": "channel"
+    }
+  ],
+  "snippet": "{\"transactionType\": \"856\", \"beginningSegmentForShipNotice\": [{\"transactionSetPurposeCode\": \"00\", \"shipmentIdentification\": \"SH-77120\", \"date\": \"20260903\"}]}",
+  "customer_note": "All our ASNs to Retailer One failed since about 9am. Nothing changed on our side. Their team says nothing changed on theirs.",
+  "context": {
+    "channel": "OUTBOUND_AS2",
+    "attempts": 3,
+    "partner_cert_not_after": "2026-09-02T23:59:59Z",
+    "first_failure_at": "2026-09-03T00:04:00Z"
+  },
+  "mock_result": {
+    "hypotheses": [
+      {
+        "rank": 1,
+        "confidence": "high",
+        "hypothesis": "The partner's AS2 signing certificate expired at the end of September 2 and the first failure is four minutes later; the MDN signature can no longer be verified",
+        "evidence": [
+          "errors[0].message",
+          "context.partner_cert_not_after",
+          "context.first_failure_at"
+        ],
+        "check": "Open the outbound AS2 channel and read the partner certificate's Not After date"
+      },
+      {
+        "rank": 2,
+        "confidence": "medium",
+        "hypothesis": "The partner installed a renewed certificate but did not send it, so we still verify against the old one",
+        "evidence": [
+          "customer_note"
+        ],
+        "check": "Ask Retailer One for their current public certificate and compare fingerprints"
+      }
+    ],
+    "customer_reply": "All ASNs to Retailer One since midnight failed because the certificate we use to verify their AS2 replies expired at the end of September 2. This is about the certificate, not your files. As soon as Retailer One sends the renewed certificate and we upload it to the channel, we will redeliver the failed ASNs. You do not need to resend anything.",
+    "ticket_two": {
+      "kind": "alert",
+      "effort": "M",
+      "title": "Certificate expiry watcher for AS2 channels, 30 days ahead",
+      "why": "Every certificate expires on a known date. A scheduled check that emails both parties 30 and 7 days before Not After turns an outage into a calendar item."
+    }
+  }
+}

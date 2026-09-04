@@ -1,0 +1,64 @@
+{
+  "_note": "Rules run before validation (use-the-rules-engine). A LOOKUPDATA with no match left the field empty, and validation then failed. Rule wording copies the function names in the docs.",
+  "id": "0192f3a1-0000-7000-8000-000000000004",
+  "direction": "in",
+  "stream": "live",
+  "ediTransactionType": "850_PURCHASE_ORDER",
+  "senderId": "RETAILER01",
+  "receiverId": "ACMEFOODS",
+  "validationStatus": "INVALID",
+  "deliveryStatus": "PENDING",
+  "acknowledgmentStatus": "NOT_ACKNOWLEDGED",
+  "errors": [
+    {
+      "path": "/baselineItemData/2/productServiceId1",
+      "code": "RULE_EXECUTION",
+      "message": "Rule \"UPC to vendor item\" failed: LOOKUPDATA(\"UPC_TO_VN\", \"01234567890\") returned no match",
+      "source": "rule"
+    },
+    {
+      "path": "/baselineItemData/2/productServiceId1",
+      "code": "MANDATORY_ELEMENT_MISSING",
+      "message": "Mandatory element PO107 (Product/Service ID) is empty",
+      "source": "guideline"
+    }
+  ],
+  "snippet": "{\"transactionType\": \"850\", \"beginningSegmentForPurchaseOrder\": [{\"purchaseOrderNumber\": \"PO-88216\"}], \"baselineItemData\": [{\"assignedIdentification\": \"3\", \"productServiceIdQualifier1\": \"UP\", \"productServiceId1\": \"01234567890\"}]}",
+  "customer_note": "One PO out of about 40 today went Invalid. The rest are fine. Line 3 is a new SKU we added last week.",
+  "context": {
+    "rule_name": "UPC to vendor item",
+    "lookup_table": "UPC_TO_VN",
+    "lookup_rows": 1180
+  },
+  "mock_result": {
+    "hypotheses": [
+      {
+        "rank": 1,
+        "confidence": "high",
+        "hypothesis": "UPC 01234567890 is the new SKU and is not in the UPC_TO_VN table, so LOOKUPDATA returned nothing, PO107 ended up empty, and validation failed",
+        "evidence": [
+          "errors[0].message",
+          "errors[1].message",
+          "customer_note"
+        ],
+        "check": "Search the UPC_TO_VN lookup table for 01234567890"
+      },
+      {
+        "rank": 2,
+        "confidence": "medium",
+        "hypothesis": "The rule does not wrap LOOKUPDATA in IFERROR, so any unmapped UPC blanks the field instead of passing the original value through",
+        "evidence": [
+          "context.rule_name"
+        ],
+        "check": "Open the rule and confirm whether IFERROR wraps LOOKUPDATA"
+      }
+    ],
+    "customer_reply": "PO-88216 failed on line 3 only. The rule that converts UPCs to your vendor item numbers has no entry for 01234567890, which matches the SKU you added last week. Add that UPC to the lookup table and resend, and the PO will validate. We can also change the rule so an unmapped UPC passes through instead of failing the whole PO.",
+    "ticket_two": {
+      "kind": "rule",
+      "effort": "S",
+      "title": "Wrap LOOKUPDATA in IFERROR and add a weekly unmapped-UPC report",
+      "why": "New SKUs are routine. With IFERROR the PO still validates, and a weekly list of UPCs that fell through lets the customer fill the table before the next order."
+    }
+  }
+}

@@ -17,6 +17,7 @@ A structured triage copilot that consumes incident evidence bundles and returns 
 
 - **Structured Triage:** `POST /triage` accepts an incident evidence bundle; returns JSON with hypotheses, checks, and escalation readiness.
 - **MCP Server:** the same triage logic is exposed as an MCP tool at `/mcp`, so any MCP-aware client (n8n, a custom agent, etc.) can call it directly. See [MCP Server docs](docs/MCP_SERVER.md).
+- **EDI Failure Triage:** `POST /triage/edi` and the `triage_edi_transaction` tool run the same pattern on a failed EDI transaction, using the status model from Orderful's public docs. Built as an interview exercise; see [EDI Triage docs](docs/EDI_TRIAGE.md) for what is real and what is invented.
 - **Mock Mode:** `BEDROCK_MOCK=true` returns deterministic canned responses that work offline with no AWS credentials.
 - **Live Bedrock Mode:** `BEDROCK_MOCK=false` invokes Amazon Bedrock Runtime with validated structured output.
 
@@ -25,6 +26,7 @@ A structured triage copilot that consumes incident evidence bundles and returns 
 - [Architecture](docs/ARCHITECTURE.md) - system boundaries, request flow, modes, and known limits
 - [MCP Server](docs/MCP_SERVER.md) - the `/mcp` tool surface, transport, and how to connect a client
 - [n8n Workflow](docs/N8N_WORKFLOW.md) - webhook → triage → Slack automation, ready to import
+- [EDI Failure Triage](docs/EDI_TRIAGE.md) - the same triage pattern pointed at EDI transaction failures, with fixtures and a CLI
 - [Operations Runbook](docs/RUNBOOK.md) - health checks, local/Render operations, failures, and rollback
 - [Security Notes](docs/SECURITY.md) - data handling, access controls, model output safety, and review checklist
 - [Portfolio Review Guide](docs/PORTFOLIO_REVIEW.md) - suggested reviewer path, tradeoffs, and discussion topics
@@ -109,6 +111,8 @@ Note: CORS is pre-configured to accept requests from `http://localhost:8080` and
 |--------|------|-------------|
 | GET | `/health` | Returns `status`, `mode` (mock/live), and `lab_url` |
 | POST | `/triage` | Accepts evidence bundle; returns hypotheses, checks, escalation notes |
+| POST | `/triage/edi` | Accepts a failed EDI transaction; returns tier, classification, hypotheses, customer reply, ticket-two action. See [docs/EDI_TRIAGE.md](docs/EDI_TRIAGE.md) |
+| GET | `/fixtures/edi` | Lists the sample EDI transactions the demo console shows, without their canned results |
 | POST | `/mcp/` | MCP streamable-HTTP endpoint exposing the `triage_incident` tool. See [docs/MCP_SERVER.md](docs/MCP_SERVER.md) |
 
 ## Deployment

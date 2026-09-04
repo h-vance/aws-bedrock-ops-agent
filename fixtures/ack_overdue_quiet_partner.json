@@ -1,0 +1,54 @@
+{
+  "_note": "Acknowledgment OVERDUE. Docs say this needs direct contact with the trading partner. Nothing is broken on the platform side. This fixture exists to check the agent does not invent an engineering fix.",
+  "id": "0192f3a1-0000-7000-8000-000000000009",
+  "direction": "out",
+  "stream": "live",
+  "ediTransactionType": "810_INVOICE",
+  "senderId": "ACMEFOODS",
+  "receiverId": "RETAILER01",
+  "validationStatus": "VALID",
+  "deliveryStatus": "DELIVERED",
+  "acknowledgmentStatus": "OVERDUE",
+  "errors": [],
+  "snippet": "{\"transactionType\": \"810\", \"beginningSegmentForInvoice\": [{\"date\": \"20260902\", \"invoiceNumber\": \"INV-20899\", \"purchaseOrderNumber\": \"PO-88190\"}]}",
+  "customer_note": "Invoice INV-20899 says Overdue. Did it not go through? Do we need to resend?",
+  "context": {
+    "deliveredAt": "2026-09-02T09:12:00Z",
+    "hours_since_delivery": 26,
+    "ack_sla_hours": 24,
+    "partner_ack_history": "997 within 2 hours for the last 90 days",
+    "other_overdue_from_same_partner": 7
+  },
+  "mock_result": {
+    "hypotheses": [
+      {
+        "rank": 1,
+        "confidence": "high",
+        "hypothesis": "Delivery succeeded and seven other invoices to the same partner are also overdue today, so the partner's acknowledgment process is stalled, not this invoice",
+        "evidence": [
+          "deliveryStatus",
+          "context.hours_since_delivery",
+          "context.other_overdue_from_same_partner",
+          "context.partner_ack_history"
+        ],
+        "check": "Confirm all eight overdue invoices are DELIVERED and to RETAILER01"
+      },
+      {
+        "rank": 2,
+        "confidence": "low",
+        "hypothesis": "The partner is sending 997s to a channel we are not watching",
+        "evidence": [
+          "acknowledgmentStatus"
+        ],
+        "check": "Check inbound 997 traffic from RETAILER01 today"
+      }
+    ],
+    "customer_reply": "INV-20899 was delivered to Retailer One on September 2 at 09:12 UTC. Do not resend it. Overdue means we have not received their acknowledgment yet, and seven other invoices to them are in the same state today, so this is on their side. We have contacted Retailer One about the acknowledgments and will let you know when they arrive.",
+    "ticket_two": {
+      "kind": "partner_contact",
+      "effort": "S",
+      "title": "Contact Retailer One about the stalled 997s",
+      "why": "Nothing is broken on the platform. The right action is a partner email with the list of delivered but unacknowledged transaction ids. No engineering change."
+    }
+  }
+}

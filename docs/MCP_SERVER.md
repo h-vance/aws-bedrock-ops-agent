@@ -5,7 +5,7 @@ The same triage logic behind `POST /triage` is also exposed as an MCP tool, so a
 ## How it's wired
 
 - `triage_core.py` holds the shared logic (`IncidentBundle`, `TriageResult`, mock responses, the Bedrock call) with no FastAPI or MCP dependency.
-- `mcp_server.py` defines one tool, `triage_incident`, on top of `triage_core`, using the official `mcp` Python SDK's `MCPServer`.
+- `mcp_server.py` defines two tools, `triage_incident` on top of `triage_core` and `triage_edi_transaction` on top of `edi_triage`, using the official `mcp` Python SDK's `MCPServer`.
 - `assistant.py` mounts the MCP server's ASGI app at `/mcp` inside the existing FastAPI app, so both the REST API and the MCP tool are served from one process and one deployment.
 
 This means the REST and MCP surfaces can never drift apart: there is exactly one implementation of the triage logic underneath both.
@@ -38,11 +38,15 @@ The SDK's DNS-rebinding protection validates the `Host`/`Origin` headers on ever
 
 The deployed Render service sets `MCP_ALLOWED_HOSTS` to include its own public hostname. Without this, every request to `/mcp` in production would 421 (the SDK's rebinding protection only auto-allows localhost by default).
 
-## The tool
+## The tools
 
 `triage_incident(bundle: IncidentBundle) -> TriageToolResult`
 
 Same request shape as `POST /triage`'s body; same `hypotheses` / `recommended_checks` / `escalation_ready` / `customer_comms_draft` response shape, plus `incident_id` and `mode` (`mock` or `bedrock`) so a client can tell which run produced the result.
+
+`triage_edi_transaction(tx: FailedTransaction) -> EdiTriageToolResult`
+
+Same request shape as `POST /triage/edi`'s body (any file under `fixtures/` works as-is); returns `hypotheses` / `customer_reply` / `ticket_two`, plus `transaction_id`, `tier`, `classification`, and `mode`. See [EDI_TRIAGE.md](EDI_TRIAGE.md).
 
 ## Testing it locally without a full MCP client
 

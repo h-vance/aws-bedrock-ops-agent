@@ -1,0 +1,58 @@
+{
+  "_note": "The customer is on X12 passthrough, so the snippet is raw X12 and the fix lives in their EDI translator, not in a JSON map. BSN05 is the Hierarchical Structure Code; 0001 is Shipment/Order/Packaging/Item, 0004 is Shipment/Order/Item. The guideline requirement is invented.",
+  "id": "0192f3a1-0000-7000-8000-000000000010",
+  "direction": "in",
+  "stream": "live",
+  "ediTransactionType": "856_SHIP_NOTICE",
+  "senderId": "ACMEFOODS",
+  "receiverId": "RETAILER01",
+  "validationStatus": "INVALID",
+  "deliveryStatus": "PENDING",
+  "acknowledgmentStatus": "NOT_ACKNOWLEDGED",
+  "errors": [
+    {
+      "path": "/BSN/05",
+      "code": "CODE_NOT_ALLOWED",
+      "message": "Element BSN05 (Hierarchical Structure Code) value \"0001\" is not allowed by RETAILER01 856 guideline. Allowed: \"0004\" (Shipment, Order, Item)",
+      "source": "guideline"
+    }
+  ],
+  "snippet": "ISA*00*          *00*          *ZZ*ACMEFOODS      *ZZ*RETAILER01     *260903*0912*U*00401*000000131*0*P*>~GS*SH*ACMEFOODS*RETAILER01*20260903*0912*131*X*004010~ST*856*0001~BSN*00*SH-77131*20260903*0912*0001~HL*1**S~",
+  "customer_note": "Our 856s to Retailer One are Invalid but the same ASN format works fine for our three other retailers.",
+  "context": {
+    "other_partners_structure_code": "0001",
+    "translator": "customer-hosted, X12 passthrough"
+  },
+  "mock_result": {
+    "hypotheses": [
+      {
+        "rank": 1,
+        "confidence": "high",
+        "hypothesis": "Retailer One's 856 guideline requires structure 0004 (Shipment, Order, Item) in BSN05 and the customer's translator emits 0001 for every partner; on X12 passthrough the fix is in their translator's partner profile, not in a map on our side",
+        "evidence": [
+          "errors[0].message",
+          "snippet",
+          "context.other_partners_structure_code",
+          "context.translator"
+        ],
+        "check": "Confirm the tier from the raw ISA in the snippet, then check the guideline PDF for BSN05 allowed codes"
+      },
+      {
+        "rank": 2,
+        "confidence": "medium",
+        "hypothesis": "A rule could rewrite BSN05, but the HL loop must also match 0004, so a code-only fix would validate the header and ship a wrong body",
+        "evidence": [
+          "snippet"
+        ],
+        "check": "Look at the HL hierarchy in the failing ASN for a P (pack) level"
+      }
+    ],
+    "customer_reply": "Retailer One requires a different ASN structure from your other retailers: Shipment, Order, Item without a pack level, which is code 0004 in BSN05. Your ASN uses code 0001 with a packaging level. Since you send raw X12, this is a partner-specific setting in your EDI translator. Once the Retailer One profile emits the 0004 structure, the ASNs will validate. Their guideline is linked for reference.",
+    "ticket_two": {
+      "kind": "knowledge_article",
+      "effort": "S",
+      "title": "856 hierarchical structure codes by partner (0001 vs 0004)",
+      "why": "Every passthrough customer that adds this retailer hits the same requirement. A short article with the BSN05 code, the HL layout, and a sample ASN removes a ticket per onboarding."
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "_note": "Unprocessed: the API returned 404 and no transaction was created. The message wording follows the causes listed on the unprocessed-transactions doc page. receiverId is one character short of the real partner id on purpose.",
+  "id": "0192f3a1-0000-7000-8000-000000000001",
+  "direction": "in",
+  "stream": "live",
+  "ediTransactionType": "850_PURCHASE_ORDER",
+  "senderId": "RETAILER01",
+  "receiverId": "ACMEFOOD",
+  "validationStatus": null,
+  "deliveryStatus": "PENDING",
+  "acknowledgmentStatus": "NOT_ACKNOWLEDGED",
+  "errors": [
+    {
+      "path": "/receiverId",
+      "code": "404",
+      "message": "The Trading Partnership doesn't exist in Orderful for sender RETAILER01 and receiver ACMEFOOD",
+      "source": "api"
+    }
+  ],
+  "snippet": "{\"transactionType\": \"850\", \"sender\": {\"isaId\": \"RETAILER01\"}, \"receiver\": {\"isaId\": \"ACMEFOOD\"}, \"beginningSegmentForPurchaseOrder\": [{\"purchaseOrderNumber\": \"PO-88213\"}]}",
+  "customer_note": "Our 850s to Acme Foods stopped showing up in the portal this morning. The API gives us a 404 and nothing else changed on our side.",
+  "context": {
+    "http_status": 404,
+    "last_success_at": "2026-09-02T17:40:00Z"
+  },
+  "mock_result": {
+    "hypotheses": [
+      {
+        "rank": 1,
+        "confidence": "high",
+        "hypothesis": "receiverId ACMEFOOD is one character short of the partner's ISA ID ACMEFOODS, so the partnership lookup fails and no transaction is created",
+        "evidence": [
+          "errors[0].message",
+          "receiverId",
+          "context.http_status"
+        ],
+        "check": "Compare receiverId in the request with the ISA ID on the Trading Partnership page for Acme Foods"
+      },
+      {
+        "rank": 2,
+        "confidence": "low",
+        "hypothesis": "The partnership exists but the 850 relationship is still in Complete Testing on the live stream",
+        "evidence": [
+          "stream",
+          "context.last_success_at"
+        ],
+        "check": "Open the RETAILER01 to ACMEFOODS relationship and confirm the 850 is live"
+      }
+    ],
+    "customer_reply": "Thanks for the quick report. The 404 means we never created the transaction, so nothing was lost in transit. The receiver ID on the request is ACMEFOOD, and the partnership is set up as ACMEFOODS. Once the ID matches, the POs will process as before. Can you confirm which value your integration sends?",
+    "ticket_two": {
+      "kind": "knowledge_article",
+      "effort": "S",
+      "title": "ISA ID mismatch checklist for a 404 on transaction create",
+      "why": "The API 404 has four documented causes. A one-page checklist with the exact page to check for each lets the customer self-serve before opening a ticket."
+    }
+  }
+}

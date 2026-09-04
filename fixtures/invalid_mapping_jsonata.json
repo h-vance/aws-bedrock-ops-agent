@@ -1,0 +1,58 @@
+{
+  "_note": "Transformation failure surfaced in the Validation Errors tab (fix-an-invalid-transaction: mapping failures or missing required values). The JSONata path wording is invented.",
+  "id": "0192f3a1-0000-7000-8000-000000000005",
+  "direction": "in",
+  "stream": "live",
+  "ediTransactionType": "850_PURCHASE_ORDER",
+  "senderId": "RETAILER01",
+  "receiverId": "ACMEFOODS",
+  "validationStatus": "INVALID",
+  "deliveryStatus": "PENDING",
+  "acknowledgmentStatus": "NOT_ACKNOWLEDGED",
+  "errors": [
+    {
+      "path": "/beginningSegmentForPurchaseOrder/0/purchaseOrderNumber",
+      "code": "TRANSFORMATION",
+      "message": "Transformation error: required value \"purchaseOrderNumber\" resolved to undefined at $.beginningSegmentForPurchaseOrder[0].purchaseOrderNumber",
+      "source": "mapping"
+    }
+  ],
+  "snippet": "{\"transactionType\": \"850\", \"beginningSegmentForPurchaseOrder\": [{\"transactionSetPurposeCode\": \"00\", \"purchaseOrderTypeCode\": \"SA\", \"date\": \"20260828\"}]}",
+  "customer_note": "We changed our order export to send po_number instead of poNumber. Now the mapping breaks. Can you fix it on your side?",
+  "context": {
+    "mapping": "retailer01_erp_to_850.jsonata",
+    "mapping_expression": "$.order.poNumber",
+    "ui_tab": "?tab=errors"
+  },
+  "mock_result": {
+    "hypotheses": [
+      {
+        "rank": 1,
+        "confidence": "high",
+        "hypothesis": "The export renamed poNumber to po_number; the mapping expression $.order.poNumber now resolves to undefined and purchaseOrderNumber is required",
+        "evidence": [
+          "errors[0].message",
+          "context.mapping_expression",
+          "customer_note"
+        ],
+        "check": "Open ?tab=errors and compare the raw inbound key with the mapping expression"
+      },
+      {
+        "rank": 2,
+        "confidence": "low",
+        "hypothesis": "The export only sends the PO number on some order types, so this is intermittent rather than a rename",
+        "evidence": [
+          "snippet.beginningSegmentForPurchaseOrder[0]"
+        ],
+        "check": "Check whether other POs from today mapped correctly"
+      }
+    ],
+    "customer_reply": "The mapping that turns your order export into an 850 reads the field poNumber. Your export now sends po_number, so the PO number comes through empty and the transaction fails as Invalid. We will update the mapping to read po_number, and read both names so this does not repeat if the export changes back. I will confirm here once it is live, and you can resend from then on.",
+    "ticket_two": {
+      "kind": "mapping_test",
+      "effort": "M",
+      "title": "Add a mapping regression test with the customer's sample payload",
+      "why": "A saved sample payload run through the JSONata map on every change catches renamed fields before they reach production. This customer changed one key; the next one will too."
+    }
+  }
+}

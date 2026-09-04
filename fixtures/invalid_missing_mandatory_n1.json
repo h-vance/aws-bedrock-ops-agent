@@ -1,0 +1,57 @@
+{
+  "_note": "Guideline validation: a mandatory segment is missing. Wording follows enter-guideline-requirements (mandatory loop/segment/element not provided).",
+  "id": "0192f3a1-0000-7000-8000-000000000002",
+  "direction": "in",
+  "stream": "live",
+  "ediTransactionType": "850_PURCHASE_ORDER",
+  "senderId": "RETAILER01",
+  "receiverId": "ACMEFOODS",
+  "validationStatus": "INVALID",
+  "deliveryStatus": "PENDING",
+  "acknowledgmentStatus": "NOT_ACKNOWLEDGED",
+  "errors": [
+    {
+      "path": "/partyIdentification",
+      "code": "MANDATORY_SEGMENT_MISSING",
+      "message": "Mandatory segment N1 (Ship To, N101=ST) is missing. Guideline: RETAILER01 850 v2",
+      "source": "guideline"
+    }
+  ],
+  "snippet": "{\"transactionType\": \"850\", \"beginningSegmentForPurchaseOrder\": [{\"transactionSetPurposeCode\": \"00\", \"purchaseOrderTypeCode\": \"SA\", \"purchaseOrderNumber\": \"PO-88214\", \"date\": \"20260828\"}], \"partyIdentification\": [{\"entityIdentifierCode\": \"BT\", \"name\": \"Retailer One Corp\"}]}",
+  "customer_note": "Acme says they never got PO-88214. It shows Invalid on our side but we send the same file every week.",
+  "context": {
+    "guideline_version": "RETAILER01 850 v2",
+    "previous_valid_version": "v1"
+  },
+  "mock_result": {
+    "hypotheses": [
+      {
+        "rank": 1,
+        "confidence": "high",
+        "hypothesis": "Retailer One's 850 guideline moved from v1 to v2 and v2 marks N1 Ship To mandatory; the file did not change, the requirement did",
+        "evidence": [
+          "errors[0].message",
+          "context.guideline_version",
+          "customer_note"
+        ],
+        "check": "Diff guideline v1 and v2 for the N1 loop and compare the publish date with the first Invalid"
+      },
+      {
+        "rank": 2,
+        "confidence": "medium",
+        "hypothesis": "The ERP omits N1*ST when ship-to equals bill-to, so only some POs carry it",
+        "evidence": [
+          "snippet.partyIdentification"
+        ],
+        "check": "Open a Valid 850 from last week and confirm whether it carried N1*ST"
+      }
+    ],
+    "customer_reply": "PO-88214 is held on our side as Invalid, so Acme Foods has not received it yet. Retailer One's 850 guideline now requires a Ship To segment (N1 with N101=ST), and this file does not include one. Add the Ship To address to the export and resend, and it will clear. If your system drops Ship To when it matches Bill To, tell us and we can add a rule so you do not have to change the export.",
+    "ticket_two": {
+      "kind": "rule",
+      "effort": "S",
+      "title": "Copy Bill To into Ship To when N1*ST is absent on inbound 850",
+      "why": "If the ERP drops Ship To when it equals Bill To, one rule makes every future PO valid without an ERP change."
+    }
+  }
+}

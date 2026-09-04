@@ -1,0 +1,61 @@
+{
+  "_note": "Delivery stuck in PENDING: valid, but never handed to the receiver's channel. Channel note is invented; the SFTP self-hosted success rule (file uploaded) is from transaction-success-and-failure.",
+  "id": "0192f3a1-0000-7000-8000-000000000006",
+  "direction": "out",
+  "stream": "live",
+  "ediTransactionType": "810_INVOICE",
+  "senderId": "ACMEFOODS",
+  "receiverId": "RETAILER01",
+  "validationStatus": "VALID",
+  "deliveryStatus": "PENDING",
+  "acknowledgmentStatus": "NOT_ACKNOWLEDGED",
+  "errors": [],
+  "snippet": "{\"transactionType\": \"810\", \"beginningSegmentForInvoice\": [{\"date\": \"20260903\", \"invoiceNumber\": \"INV-20931\", \"purchaseOrderNumber\": \"PO-88213\"}]}",
+  "customer_note": "Invoices to Retailer One have been sitting in Pending for almost an hour. Yesterday they went out in seconds.",
+  "context": {
+    "channel": "OUTBOUND_SFTP_SELF_HOSTED",
+    "minutes_in_status": 47,
+    "last_channel_note": "Connection timed out after 30s to sftp.acmefoods.example:22",
+    "pending_count": 12
+  },
+  "mock_result": {
+    "hypotheses": [
+      {
+        "rank": 1,
+        "confidence": "high",
+        "hypothesis": "The partner-hosted SFTP server at sftp.acmefoods.example:22 is not reachable; each attempt times out, so the file cannot be uploaded and delivery stays Pending",
+        "evidence": [
+          "context.last_channel_note",
+          "context.minutes_in_status",
+          "context.pending_count"
+        ],
+        "check": "Run the connection test on the outbound channel and confirm the partner firewall allows Orderful's egress IPs"
+      },
+      {
+        "rank": 2,
+        "confidence": "medium",
+        "hypothesis": "The partner changed the SFTP host, port, or allowlist today",
+        "evidence": [
+          "customer_note"
+        ],
+        "check": "Ask the partner whether the SFTP host or firewall changed since yesterday"
+      },
+      {
+        "rank": 3,
+        "confidence": "low",
+        "hypothesis": "A delivery backlog on our side is affecting more than this channel",
+        "evidence": [
+          "deliveryStatus"
+        ],
+        "check": "Compare Pending counts across other outbound SFTP channels right now"
+      }
+    ],
+    "customer_reply": "Your invoices are valid and queued. They are waiting because the SFTP server at Retailer One is not accepting connections, and each attempt times out after 30 seconds. Nothing needs to be resent. We have asked Retailer One to check the server and firewall, and the 12 pending invoices will go out on their own as soon as it responds.",
+    "ticket_two": {
+      "kind": "alert",
+      "effort": "M",
+      "title": "Alert when an outbound transaction stays PENDING longer than 15 minutes",
+      "why": "The customer noticed after 47 minutes. A threshold alert carrying the channel's last note would have opened this ticket 30 minutes earlier, or removed the need for the customer to open it."
+    }
+  }
+}

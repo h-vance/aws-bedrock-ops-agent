@@ -7,6 +7,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 
+from edi_triage import FailedTransaction, list_fixtures, run_edi_triage
 from mcp_server import streamable_http_app
 from rate_limit import RateLimitMiddleware
 from triage_core import IncidentBundle, run_triage
@@ -52,6 +53,21 @@ async def triage(bundle: IncidentBundle):
         raise HTTPException(status_code=400, detail="incident_id is required")
 
     return run_triage(bundle, mock=BEDROCK_MOCK)
+
+
+@app.post("/triage/edi")
+async def triage_edi(tx: FailedTransaction):
+    if not tx.id.strip():
+        raise HTTPException(status_code=400, detail="id is required")
+
+    return run_edi_triage(tx, mock=BEDROCK_MOCK)
+
+
+@app.get("/fixtures/edi")
+async def edi_fixtures():
+    # Not under /triage on purpose: listing fixtures is free, so it stays
+    # outside the rate limit that guards model calls.
+    return list_fixtures()
 
 
 @app.get("/")
