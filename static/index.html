@@ -3,188 +3,197 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" href="data:,">
 <title>AWS Bedrock Ops Agent: L2 Triage Copilot</title>
 <style>
+  :root {
+    --bg: #f4f3ec; --surface: #faf9f6; --surface-2: #f1eee9;
+    --line: #dedbd6; --line-strong: #d3cec6;
+    --ink: #111111; --ink-2: #626260; --ink-3: #7b7b78;
+    --accent: #000ce1; --accent-soft: #f0f6ff; --accent-line: #cde5ff;
+    --warm: #ff5600; --ok: #37b54a; --warn: #c48a1c; --bad: #c41c1c;
+    --radius-sm: 6px; --radius: 10px; --radius-lg: 14px; --radius-pill: 999px;
+    --sans: "Inter", -apple-system, "Segoe UI", system-ui, sans-serif;
+    --serif: "Instrument Serif", ui-serif, Georgia, serif;
+    --mono: "DM Mono", ui-monospace, Menlo, monospace;
+  }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
-    background: #0a0c0f; color: #e1e5e9; height: 100vh; display: flex; flex-direction: column;
+    font-family: var(--sans); font-size: 14px; background: var(--bg); color: var(--ink);
+    height: 100vh; display: flex; flex-direction: column; -webkit-font-smoothing: antialiased;
   }
+  a { color: var(--accent); }
+
   /* Top bar */
   .topbar {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 24px; border-bottom: 1px solid #1e2328;
-    background: #0d1013; flex-shrink: 0;
+    padding: 14px 24px; border-bottom: 1px solid var(--line); background: var(--surface); flex-shrink: 0;
   }
-  .topbar h1 { font-size: 16px; font-weight: 600; letter-spacing: 0.3px; }
-  .topbar h1 span { color: #ff9900; }
-  .topbar-subtitle { font-size: 11px; color: #6e7681; margin-left: 6px; font-weight: 400; }
-  .bedrock-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; background: #ff9900; box-shadow: 0 0 6px #ff990066; }
-  .topbar-right { display: flex; align-items: center; gap: 16px; font-size: 12px; color: #8b949e; }
-  .topbar-right a { color: #ff9900; text-decoration: none; }
-  .topbar-right a:hover { text-decoration: underline; }
+  .topbar h1 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; color: var(--ink); }
+  .topbar-subtitle { font-size: 12px; color: var(--ink-3); font-weight: 400; margin-left: 4px; }
+  .bedrock-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--warm); }
+  .topbar-right { display: flex; align-items: center; gap: 18px; font-size: 13px; color: var(--ink-3); }
+  .topbar-right a { color: var(--ink); text-decoration: none; }
+  .topbar-right a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
   /* Layout */
   .layout { display: flex; flex: 1; overflow: hidden; }
   .sidebar {
-    width: 280px; border-right: 1px solid #1e2328; overflow-y: auto;
-    padding: 16px 12px; background: #0d1013; flex-shrink: 0;
+    width: 288px; border-right: 1px solid var(--line); overflow-y: auto;
+    padding: 18px 14px; background: var(--bg); flex-shrink: 0;
   }
-  .sidebar-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #6e7681; margin-bottom: 10px; padding: 0 8px; }
+  .sidebar-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; color: var(--ink-3); margin-bottom: 10px; padding: 0 6px; }
+  .sidebar-hint { font-size: 11px; color: var(--ink-3); padding: 10px 6px 0; margin-top: 8px; border-top: 1px solid var(--line); }
   .incident-card {
-    padding: 12px; border-radius: 8px; margin-bottom: 8px; cursor: pointer;
-    border: 1px solid #1e2328; transition: all 0.15s;
+    padding: 12px 14px; border-radius: var(--radius); margin-bottom: 8px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--surface); transition: border-color 0.15s, background 0.15s;
   }
-  .incident-card:hover { border-color: #30363d; background: #161b22; }
-  .incident-card.active { border-color: #ff9900; background: #1d150d; }
-  .incident-id { font-size: 11px; font-weight: 600; color: #ff9900; margin-bottom: 4px; }
-  .incident-summary { font-size: 12px; color: #c9d1d9; line-height: 1.4; }
-  .incident-pattern { font-size: 10px; color: #6e7681; margin-top: 4px; }
-  .incident-severity { font-size: 10px; margin-top: 6px; }
-  .sev-high { color: #f85149; } .sev-mid { color: #d29922; }
+  .incident-card:hover { border-color: var(--line-strong); }
+  .incident-card.active { border-color: var(--accent); background: var(--accent-soft); }
+  .incident-id { font-family: var(--mono); font-size: 11px; color: var(--accent); margin-bottom: 4px; }
+  .incident-summary { font-size: 13px; color: var(--ink); line-height: 1.4; }
+  .incident-pattern { font-family: var(--mono); font-size: 11px; color: var(--ink-3); margin-top: 5px; }
+  .incident-severity { font-size: 11px; margin-top: 6px; display: flex; align-items: center; gap: 6px; }
+  .incident-severity::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .sev-high { color: var(--bad); } .sev-mid { color: var(--warn); }
 
   /* Main content */
-  .main { flex: 1; overflow-y: auto; padding: 0; }
+  .main { flex: 1; overflow-y: auto; }
 
-  /* Empty state / intro */
+  /* Empty state */
   .empty-state {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    height: 100%; color: #484f58; text-align: center; padding: 40px;
+    height: 100%; text-align: center; padding: 40px;
   }
-  .empty-state h2 { font-size: 18px; color: #6e7681; margin-bottom: 8px; }
-  .empty-state p { font-size: 13px; line-height: 1.6; max-width: 520px; margin-bottom: 16px; }
-  .empty-state .shortcut { display: inline-block; background: #161b22; border: 1px solid #30363d; border-radius: 4px; padding: 2px 8px; font-size: 11px; margin: 0 2px; }
+  .empty-state h2 { font-family: var(--serif); font-weight: 400; font-size: 36px; line-height: 1.1; letter-spacing: -0.01em; color: var(--ink); margin-bottom: 14px; }
+  .empty-state p { font-size: 14px; line-height: 1.6; max-width: 560px; margin-bottom: 14px; color: var(--ink-2); }
+  .empty-state .steps { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; align-items: center; margin-top: 6px; }
+  .empty-state .arrow { color: var(--ink-3); }
+  .empty-state .shortcut { display: inline-block; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-pill); padding: 5px 12px; font-family: var(--mono); font-size: 11px; color: var(--ink); }
+  .empty-state .foot { margin-top: 28px; font-size: 12px; color: var(--ink-3); }
 
   /* Detail */
-  .detail { padding: 24px; display: none; }
+  .detail { padding: 28px 32px; display: none; max-width: 960px; }
   .detail.active { display: block; }
-
-  .detail-header { margin-bottom: 24px; }
-  .detail-header .id { font-size: 12px; color: #ff9900; font-weight: 600; }
-  .detail-header h2 { font-size: 20px; margin: 4px 0; font-weight: 600; }
-  .detail-header .summary { font-size: 13px; color: #8b949e; line-height: 1.5; }
+  .detail-header { margin-bottom: 22px; }
+  .detail-header .id { font-family: var(--mono); font-size: 12px; color: var(--accent); }
+  .detail-header h2 { font-family: var(--serif); font-weight: 400; font-size: 30px; line-height: 1.15; letter-spacing: -0.01em; margin: 6px 0; }
+  .detail-header .summary { font-size: 14px; color: var(--ink-2); line-height: 1.5; }
 
   /* Tabs */
-  .detail-tabs { display: flex; gap: 0; border-bottom: 1px solid #1e2328; margin-bottom: 20px; }
+  .detail-tabs { display: flex; border-bottom: 1px solid var(--line); margin-bottom: 22px; }
   .detail-tab {
-    font-size: 12px; padding: 8px 20px; cursor: pointer; color: #6e7681;
-    border-bottom: 2px solid transparent; user-select: none;
+    font-size: 13px; padding: 8px 16px; cursor: pointer; color: var(--ink-3);
+    border-bottom: 2px solid transparent; margin-bottom: -1px; user-select: none;
   }
-  .detail-tab:hover { color: #c9d1d9; }
-  .detail-tab.active { color: #c9d1d9; border-bottom-color: #ff9900; }
+  .detail-tab:hover { color: var(--ink); }
+  .detail-tab.active { color: var(--ink); border-bottom-color: var(--accent); }
 
-  .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #6e7681; margin-bottom: 12px; margin-top: 24px; }
-  .section-title:first-of-type { margin-top: 0; }
+  .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; color: var(--ink-3); margin: 24px 0 12px; }
+  .section-title:first-child { margin-top: 0; }
 
-  .hypothesis { background: #0d1013; border: 1px solid #1e2328; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+  .hypothesis { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 18px; margin-bottom: 12px; }
   .hypothesis-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-  .hypothesis-rank { font-size: 11px; font-weight: 600; color: #8b949e; }
-  .confidence { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 100px; }
-  .confidence.high { background: #1a3a2a; color: #3fb950; }
-  .confidence.medium { background: #2d2a1a; color: #d29922; }
-  .confidence.low { background: #3a1a1a; color: #f85149; }
-  .hypothesis-text { font-size: 14px; color: #c9d1d9; line-height: 1.5; margin-bottom: 10px; }
-  .evidence-ids { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
-  .evidence-tag { font-size: 10px; background: #161b22; border: 1px solid #30363d; border-radius: 4px; padding: 2px 6px; color: #8b949e; font-family: monospace; }
-  .check-command { font-size: 12px; background: #040608; border: 1px solid #1e2328; border-radius: 6px; padding: 10px 14px; font-family: monospace; color: #7ee787; overflow-x: auto; white-space: nowrap; }
+  .hypothesis-rank { font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+  .confidence { font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+  .confidence::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .confidence.high { color: var(--ok); }
+  .confidence.medium { color: var(--warn); }
+  .confidence.low { color: var(--bad); }
+  .hypothesis-text { font-size: 15px; color: var(--ink); line-height: 1.5; margin-bottom: 10px; }
+  .evidence-ids { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .evidence-tag { font-family: var(--mono); font-size: 11px; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 2px 7px; color: var(--ink-2); }
+  .check-command { font-family: var(--mono); font-size: 12px; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 14px; color: var(--ink); overflow-x: auto; white-space: nowrap; }
+  .check-note { font-size: 13px; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 14px; color: var(--ink); line-height: 1.5; }
 
   .checks { list-style: none; }
-  .checks li { font-size: 13px; padding: 6px 0; color: #c9d1d9; }
-  .checks li::before { content: "→"; color: #ff9900; margin-right: 8px; }
+  .checks li { font-size: 14px; padding: 6px 0; color: var(--ink); }
+  .checks li::before { content: "→"; color: var(--accent); margin-right: 8px; }
 
-  .escalation-box { margin-top: 24px; padding: 16px; border-radius: 8px; border: 1px solid; }
-  .escalation-box.ready { border-color: #2d6a40; background: #0f1f15; }
-  .escalation-box.not-ready { border-color: #5a4a20; background: #1f1a0f; }
-  .escalation-box .label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
-  .escalation-box.ready .label { color: #3fb950; }
-  .escalation-box.not-ready .label { color: #d29922; }
-  .escalation-box .comms { font-size: 13px; color: #c9d1d9; line-height: 1.5; font-style: italic; }
+  .escalation-box { margin-top: 24px; padding: 18px; border-radius: var(--radius-lg); border: 1px solid var(--line-strong); background: var(--surface-2); }
+  .escalation-box.ready, .escalation-box.reply { border-color: var(--accent-line); background: var(--accent-soft); }
+  .escalation-box .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; margin-bottom: 8px; color: var(--ink-2); }
+  .escalation-box.ready .label, .escalation-box.reply .label { color: var(--accent); }
+  .escalation-box .ticket-title { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+  .escalation-box .comms { font-size: 14px; color: var(--ink); line-height: 1.55; }
   .escalation-box .copy-btn {
-    margin-top: 10px; font-size: 11px; padding: 4px 12px; border-radius: 6px;
-    border: 1px solid #30363d; background: #161b22; color: #c9d1d9; cursor: pointer;
+    margin-top: 12px; font-family: var(--sans); font-size: 12px; font-weight: 500; padding: 7px 14px;
+    border-radius: var(--radius-pill); border: 1px solid var(--ink); background: var(--ink); color: #fff; cursor: pointer;
   }
-  .escalation-box .copy-btn:hover { background: #1c2128; }
-  .escalation-box.reply { border-color: #2d6a40; background: #0f1f15; }
-  .escalation-box.reply .label { color: #3fb950; }
-  .escalation-box.ticket { border-color: #2a4a7a; background: #0f1520; }
-  .escalation-box.ticket .label { color: #58a6ff; }
-  .escalation-box .ticket-title { font-size: 14px; color: #c9d1d9; margin-bottom: 6px; }
-  .check-note { font-size: 12px; background: #040608; border: 1px solid #1e2328; border-radius: 6px; padding: 10px 14px; color: #c9d1d9; line-height: 1.5; }
-  .status-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-  .snippet { font-size: 11px; background: #040608; border: 1px solid #1e2328; border-radius: 6px; padding: 12px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; color: #8b949e; font-family: monospace; }
-  .customer-note { font-size: 13px; color: #c9d1d9; line-height: 1.5; font-style: italic; padding: 12px 14px; border-left: 3px solid #30363d; background: #0d1013; }
+  .escalation-box .copy-btn:hover { background: #333; border-color: #333; }
 
   /* Loading */
-  .loading { display: flex; align-items: center; gap: 8px; color: #6e7681; font-size: 13px; padding: 40px; justify-content: center; }
-  .spinner { width: 16px; height: 16px; border: 2px solid #30363d; border-top-color: #ff9900; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  .loading { display: flex; align-items: center; gap: 10px; color: var(--ink-3); font-size: 13px; padding: 40px; justify-content: center; }
+  .spinner { width: 16px; height: 16px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
   /* Error */
   .error-state { text-align: center; padding: 40px; }
-  .error-state .icon { font-size: 32px; margin-bottom: 12px; opacity: 0.5; }
-  .error-state p { font-size: 13px; color: #f85149; margin-bottom: 12px; }
+  .error-state .icon { font-size: 28px; margin-bottom: 12px; color: var(--bad); }
+  .error-state p { font-size: 13px; color: var(--bad); margin-bottom: 12px; }
   .error-state button {
-    font-size: 12px; padding: 6px 16px; border-radius: 6px;
-    border: 1px solid #30363d; background: #161b22; color: #c9d1d9; cursor: pointer;
+    font-family: var(--sans); font-size: 12px; font-weight: 500; padding: 7px 16px; border-radius: var(--radius-pill);
+    border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); cursor: pointer;
   }
-  .error-state button:hover { background: #1c2128; }
+  .error-state button:hover { border-color: var(--ink); }
 
   /* Timeline */
   .timeline { position: relative; padding: 4px 0 4px 20px; }
-  .timeline::before {
-    content: ''; position: absolute; left: 8px; top: 0; bottom: 0;
-    width: 2px; background: #1e2328;
-  }
+  .timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--line-strong); }
   .timeline-event { position: relative; padding: 8px 0 8px 24px; }
   .timeline-dot {
     position: absolute; left: -12px; top: 12px; width: 10px; height: 10px;
-    border-radius: 50%; background: #30363d; border: 2px solid #1e2328; z-index: 1;
+    border-radius: 50%; background: var(--line-strong); border: 2px solid var(--bg); z-index: 1;
   }
-  .timeline-dot.error { background: #f85149; }
-  .timeline-dot.warn { background: #d29922; }
-  .timeline-dot.ok { background: #3fb950; }
+  .timeline-dot.error { background: var(--bad); }
+  .timeline-dot.warn { background: var(--warn); }
+  .timeline-dot.ok { background: var(--ok); }
   .timeline-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .timeline-ts { font-size: 11px; color: #6e7681; font-family: monospace; white-space: nowrap; }
-  .timeline-text { font-size: 13px; color: #c9d1d9; }
-  .timeline-trace {
-    font-size: 10px; padding: 1px 6px; border-radius: 4px;
-    background: #161b22; border: 1px solid #30363d; color: #8b949e; font-family: monospace;
-  }
+  .timeline-ts { font-family: var(--mono); font-size: 11px; color: var(--ink-3); white-space: nowrap; }
+  .timeline-text { font-size: 13px; color: var(--ink); }
+  .timeline-trace { font-family: var(--mono); font-size: 10px; padding: 1px 6px; border-radius: var(--radius-sm); background: var(--surface-2); border: 1px solid var(--line); color: var(--ink-2); }
 
   /* Evidence panel */
-  .evidence-section { margin-top: 20px; }
+  .evidence-section { margin-top: 22px; }
   .evidence-section:first-child { margin-top: 0; }
+  .muted { color: var(--ink-3); font-size: 13px; }
 
-  .log-entry {
-    font-size: 12px; font-family: monospace; padding: 6px 10px; margin-bottom: 4px;
-    border-radius: 4px; border-left: 3px solid; background: #0d1013;
-  }
-  .log-entry.ERROR { border-color: #f85149; color: #f85149; }
-  .log-entry.WARNING { border-color: #d29922; color: #d29922; }
-  .log-entry.INFO { border-color: #58a6ff; color: #8b949e; }
+  .log-entry { font-family: var(--mono); font-size: 12px; padding: 7px 10px; margin-bottom: 4px; border-radius: var(--radius-sm); border-left: 3px solid; background: var(--surface-2); color: var(--ink); }
+  .log-entry.ERROR { border-color: var(--bad); }
+  .log-entry.WARNING { border-color: var(--warn); }
+  .log-entry.INFO { border-color: var(--accent); }
+  .log-entry .dim { color: var(--ink-3); }
 
-  .sample-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  .sample-table th { text-align: left; padding: 6px 10px; color: #6e7681; border-bottom: 1px solid #1e2328; font-weight: 500; }
-  .sample-table td { padding: 6px 10px; border-bottom: 1px solid #1e2328; color: #c9d1d9; }
-  .status-2xx { color: #3fb950; } .status-4xx { color: #d29922; } .status-5xx { color: #f85149; }
+  .sample-table { width: 100%; border-collapse: collapse; }
+  .sample-table th { text-align: left; padding: 6px 10px; color: var(--ink-3); border-bottom: 1px solid var(--line-strong); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .sample-table td { padding: 7px 10px; border-bottom: 1px solid var(--line); color: var(--ink); font-family: var(--mono); font-size: 12px; }
+  .status-2xx { color: var(--ok); } .status-4xx { color: var(--warn); } .status-5xx { color: var(--bad); }
 
-  .endpoint-tags { display: flex; gap: 6px; flex-wrap: wrap; }
-  .endpoint-tag { font-size: 11px; padding: 3px 10px; border-radius: 100px; background: #161b22; border: 1px solid #30363d; color: #8b949e; font-family: monospace; }
+  .endpoint-tags, .status-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .status-row { margin-bottom: 18px; }
+  .endpoint-tag { font-family: var(--mono); font-size: 11px; padding: 3px 10px; border-radius: var(--radius-pill); background: var(--surface-2); border: 1px solid var(--line); color: var(--ink-2); }
+  .snippet { font-family: var(--mono); font-size: 11.5px; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px 14px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; color: var(--ink); line-height: 1.5; }
+  .customer-note { font-size: 14px; color: var(--ink); line-height: 1.55; padding: 12px 16px; border-left: 3px solid var(--accent); background: var(--surface); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+  .fixture-note { font-size: 13px; color: var(--ink-2); line-height: 1.5; }
 
   .api-response { margin-top: 24px; }
-  .api-response summary { cursor: pointer; font-size: 12px; color: #ff9900; padding: 8px 0; }
-  .api-response pre { font-size: 11px; background: #040608; border: 1px solid #1e2328; border-radius: 6px; padding: 14px; overflow-x: auto; max-height: 300px; }
+  .api-response summary { cursor: pointer; font-size: 13px; color: var(--accent); padding: 8px 0; }
+  .api-response pre { font-family: var(--mono); font-size: 11.5px; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px; overflow-x: auto; max-height: 320px; color: var(--ink); }
 
   @media (max-width: 700px) {
     .layout { flex-direction: column; }
-    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid #1e2328; max-height: 200px; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); max-height: 240px; }
+    .detail { padding: 20px; }
   }
 </style>
 </head>
 <body>
 <div class="topbar">
   <div style="display:flex;align-items:center;gap:12px">
-    <h1><span class="bedrock-dot"></span><span>Bedrock</span> Ops Agent <span class="topbar-subtitle">L2 triage copilot</span></h1>
+    <h1><span class="bedrock-dot"></span>Bedrock Ops Agent <span class="topbar-subtitle">L2 triage copilot</span></h1>
   </div>
   <div class="topbar-right">
     <a href="/health">/health</a>
@@ -199,13 +208,12 @@
     <div id="incident-list"></div>
     <div class="sidebar-label" style="margin-top:20px">EDI Transactions</div>
     <div id="edi-list"></div>
-    <div style="font-size:10px;color:#484f58;padding:8px;margin-top:8px;border-top:1px solid #1e2328">
+    <div class="sidebar-hint">
       Click an item to run the copilot
     </div>
   </div>
   <div class="main" id="main-content">
     <div class="empty-state" id="empty-state">
-      <div style="font-size:32px;margin-bottom:16px;opacity:0.6;font-weight:300;letter-spacing:2px">[ ops ]</div>
       <h2>AWS Bedrock Ops Agent</h2>
       <p>
         A structured L2 triage copilot for support engineers. Ingest incident evidence and get ranked hypotheses,
@@ -215,16 +223,14 @@
         The EDI list runs the same pattern on failed EDI transactions: classification, ranked causes,
         a customer reply, and the follow-up that prevents the next ticket.
       </p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
-        <span class="shortcut">1. Select an incident</span>
-        <span style="color:#484f58">→</span>
+      <div class="steps">
+        <span class="shortcut">1. Select an item</span>
+        <span class="arrow">→</span>
         <span class="shortcut">2. Copilot analyzes evidence</span>
-        <span style="color:#484f58">→</span>
+        <span class="arrow">→</span>
         <span class="shortcut">3. Get triage output</span>
       </div>
-      <div style="margin-top:24px;font-size:11px;color:#484f58">
-        FastAPI · AWS Bedrock · <span class="shortcut">mock mode</span> (no AWS account needed)
-      </div>
+      <div class="foot">FastAPI · AWS Bedrock · mock mode, no AWS account needed</div>
     </div>
     <div id="detail-view" class="detail"></div>
   </div>
@@ -343,7 +349,7 @@ function renderSidebar() {
       <div class="incident-id">${escapeHtml(inc.id)}</div>
       <div class="incident-summary">${escapeHtml(inc.summary)}</div>
       <div class="incident-pattern">pattern: ${escapeHtml(inc.pattern)}</div>
-      <div class="incident-severity ${inc.severity === 'high' ? 'sev-high' : 'sev-mid'}">${escapeHtml(inc.severity.toUpperCase())} severity</div>
+      <div class="incident-severity ${inc.severity === 'high' ? 'sev-high' : 'sev-mid'}">${escapeHtml(inc.severity)} severity</div>
     </div>
   `).join("");
   const ediList = document.getElementById("edi-list");
@@ -379,7 +385,7 @@ function formatTs(ts) {
 }
 
 function renderTimeline(timeline) {
-  if (!timeline || timeline.length === 0) return "<p style='color:#6e7681;font-size:13px'>No timeline data</p>";
+  if (!timeline || timeline.length === 0) return "<p class='muted'>No timeline data</p>";
   return `<div class="timeline">${timeline.map(t => `
     <div class="timeline-event">
       <div class="timeline-dot ${dotClass(t.event)}"></div>
@@ -393,22 +399,22 @@ function renderTimeline(timeline) {
 }
 
 function renderLogLines(logs) {
-  if (!logs || logs.length === 0) return "<p style='color:#6e7681;font-size:13px'>No log lines</p>";
+  if (!logs || logs.length === 0) return "<p class='muted'>No log lines</p>";
   return logs.map(l => `
     <div class="log-entry ${safeToken(l.level, ["INFO", "WARNING", "ERROR"], "INFO")}">
-      <span style="color:#6e7681">[${escapeHtml(l.level)}]</span> ${escapeHtml(l.message)}
-      ${l.trace_id ? ` <span style="color:#484f58">(${escapeHtml(l.trace_id)})</span>` : ""}
+      <span class="dim">[${escapeHtml(l.level)}]</span> ${escapeHtml(l.message)}
+      ${l.trace_id ? ` <span class="dim">(${escapeHtml(l.trace_id)})</span>` : ""}
     </div>
   `).join("");
 }
 
 function renderSamples(samples) {
-  if (!samples || samples.length === 0) return "<p style='color:#6e7681;font-size:13px'>No request samples</p>";
+  if (!samples || samples.length === 0) return "<p class='muted'>No request samples</p>";
   return `<table class="sample-table"><tr><th>Method</th><th>Path</th><th>Status</th></tr>${samples.map(s => `
     <tr>
-      <td style="font-family:monospace">${escapeHtml(s.method)}</td>
-      <td style="font-family:monospace">${escapeHtml(s.path)}</td>
-      <td class="${statusClass(s.status)}" style="font-family:monospace">${escapeHtml(s.status)}</td>
+      <td>${escapeHtml(s.method)}</td>
+      <td>${escapeHtml(s.path)}</td>
+      <td class="${statusClass(s.status)}">${escapeHtml(s.status)}</td>
     </tr>
   `).join("")}</table>`;
 }
@@ -448,11 +454,6 @@ function renderTriageTab(inc, data) {
   const recommendedChecks = asArray(data.recommended_checks);
   const escalationReady = Boolean(data.escalation_ready);
   return `
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
-      <span style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#6e7681">Copilot Analysis</span>
-      <span style="font-size:9px;padding:2px 8px;border-radius:100px;background:#1d150d;color:#ff9900;border:1px solid #5a3a10;font-weight:500">BEDROCK</span>
-    </div>
-
     <div class="section-title">Hypotheses (${hypotheses.length})</div>
     ${hypotheses.map(h => `
       <div class="hypothesis">
@@ -603,10 +604,10 @@ function renderEdiTransactionTab(tx) {
     </div>
     <div class="evidence-section">
       <div class="section-title">Errors (${errors.length})</div>
-      ${errors.length === 0 ? "<p style='color:#6e7681;font-size:13px'>No errors reported</p>" : errors.map(e => `
+      ${errors.length === 0 ? "<p class='muted'>No errors reported</p>" : errors.map(e => `
         <div class="log-entry ERROR">
-          <span style="color:#6e7681">[${escapeHtml(e.source)}]</span> ${escapeHtml(e.message)}
-          <span style="color:#484f58">(${escapeHtml(e.path)}${e.code ? ", " + escapeHtml(e.code) : ""})</span>
+          <span class="dim">[${escapeHtml(e.source)}]</span> ${escapeHtml(e.message)}
+          <span class="dim">(${escapeHtml(e.path)}${e.code ? ", " + escapeHtml(e.code) : ""})</span>
         </div>
       `).join("")}
     </div>
@@ -618,7 +619,7 @@ function renderEdiTransactionTab(tx) {
       <div class="section-title">Context</div>
       <pre class="snippet">${escapeHtml(JSON.stringify(tx.context ?? {}, null, 2))}</pre>
     </div>
-    ${tx._note ? `<div class="evidence-section"><div class="section-title">Fixture Note</div><p style="font-size:12px;color:#8b949e;line-height:1.5">${escapeHtml(tx._note)}</p></div>` : ""}
+    ${tx._note ? `<div class="evidence-section"><div class="section-title">Fixture Note</div><p class="fixture-note">${escapeHtml(tx._note)}</p></div>` : ""}
   `;
 }
 
