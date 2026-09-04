@@ -9,6 +9,10 @@ services:
     envVars:
       - key: BEDROCK_MOCK
         value: "true"
+      # Mock mode costs nothing per call, so the limit only needs to stop
+      # runaway scripts, not a person clicking through every sample.
+      - key: RATE_LIMIT_REQUESTS
+        value: "200"
       - key: LAB_BASE_URL
         value: "https://aws-bedrock-ops-agent.onrender.com"
       - key: CORS_ORIGINS

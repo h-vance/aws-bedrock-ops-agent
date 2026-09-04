@@ -98,7 +98,7 @@ BEDROCK_MOCK=true python assistant.py
 | `BEDROCK_MODEL_ID` | `amazon.titan-text-express-v1` | Bedrock model invoked in live mode |
 | `MCP_ALLOWED_HOSTS` | `127.0.0.1:*,localhost:*,[::1]:*` | Comma-separated `Host` header allowlist for the `/mcp` endpoint |
 | `MCP_ALLOWED_ORIGINS` | `http://127.0.0.1:*,http://localhost:*,http://[::1]:*` | Comma-separated `Origin` header allowlist for the `/mcp` endpoint |
-| `RATE_LIMIT_REQUESTS` | `20` | Max requests per client IP per window on `/triage` and `/mcp` |
+| `RATE_LIMIT_REQUESTS` | `20` | Max requests per client IP per window on `/triage` and `/mcp`. The Render deploy sets `200`, since mock mode costs nothing per call |
 | `RATE_LIMIT_WINDOW_SECONDS` | `3600` | Rate limit window, in seconds |
 | `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` | unset | Enables OTel tracing of Bedrock calls to Langfuse when both are set; no-op otherwise |
 | `LANGFUSE_HOST` | `https://us.cloud.langfuse.com` | Langfuse region endpoint |
