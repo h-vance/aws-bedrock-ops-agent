@@ -10,11 +10,11 @@
 <title>AWS Bedrock Ops Agent: L2 Triage Copilot</title>
 <style>
   :root {
-    --bg: #f4f3ec; --surface: #faf9f6; --surface-2: #f1eee9;
-    --line: #dedbd6; --line-strong: #d3cec6;
-    --ink: #111111; --ink-2: #626260; --ink-3: #7b7b78;
-    --accent: #000ce1; --accent-soft: #f0f6ff; --accent-line: #cde5ff;
-    --warm: #ff5600; --ok: #37b54a; --warn: #c48a1c; --bad: #c41c1c;
+    --bg: #131519; --surface: #1b1d22; --surface-2: #23262c;
+    --line: #2b2e35; --line-strong: #383c45;
+    --ink: #ececee; --ink-2: #a9adb5; --ink-3: #7e838c;
+    --accent: #7aa2ff; --accent-soft: #1b2236; --accent-line: #2f3f66;
+    --warm: #ff6a33; --ok: #4cc26a; --warn: #e0a83a; --bad: #f0605d;
     --radius-sm: 6px; --radius: 10px; --radius-lg: 14px; --radius-pill: 999px;
     --sans: "Inter", -apple-system, "Segoe UI", system-ui, sans-serif;
     --serif: "Instrument Serif", ui-serif, Georgia, serif;
@@ -23,7 +23,7 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     font-family: var(--sans); font-size: 14px; background: var(--bg); color: var(--ink);
-    height: 100vh; display: flex; flex-direction: column; -webkit-font-smoothing: antialiased;
+    height: 100vh; display: flex; flex-direction: column; -webkit-font-smoothing: antialiased; color-scheme: dark;
   }
   a { color: var(--accent); }
 
@@ -52,7 +52,7 @@
     border: 1px solid var(--line); background: var(--surface); transition: border-color 0.15s, background 0.15s;
   }
   .incident-card:hover { border-color: var(--line-strong); }
-  .incident-card.active { border-color: var(--accent); background: var(--accent-soft); }
+  .incident-card.active { border-color: var(--accent-line); background: var(--accent-soft); }
   .incident-id { font-family: var(--mono); font-size: 11px; color: var(--accent); margin-bottom: 4px; }
   .incident-summary { font-size: 13px; color: var(--ink); line-height: 1.4; }
   .incident-pattern { font-family: var(--mono); font-size: 11px; color: var(--ink-3); margin-top: 5px; }
@@ -121,9 +121,9 @@
   .escalation-box .comms { font-size: 14px; color: var(--ink); line-height: 1.55; }
   .escalation-box .copy-btn {
     margin-top: 12px; font-family: var(--sans); font-size: 12px; font-weight: 500; padding: 7px 14px;
-    border-radius: var(--radius-pill); border: 1px solid var(--ink); background: var(--ink); color: #fff; cursor: pointer;
+    border-radius: var(--radius-pill); border: 1px solid var(--ink); background: var(--ink); color: var(--bg); cursor: pointer;
   }
-  .escalation-box .copy-btn:hover { background: #333; border-color: #333; }
+  .escalation-box .copy-btn:hover { background: #fff; border-color: #fff; }
 
   /* Loading */
   .loading { display: flex; align-items: center; gap: 10px; color: var(--ink-3); font-size: 13px; padding: 40px; justify-content: center; }
