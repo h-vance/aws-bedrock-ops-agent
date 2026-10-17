@@ -9,7 +9,7 @@ This guide is for reviewers who want to quickly understand what the project demo
 - Deterministic mock mode for reliable demos without AWS credentials.
 - Amazon Bedrock integration path with validated structured output.
 - Frontend handling for a realistic support workflow: evidence, hypotheses, checks, escalation status, and customer comms.
-- CI coverage for Python linting, unit tests, and link checks.
+- CI coverage for Python linting, tests, dependency auditing, and link checks.
 
 ## Best Review Path
 
@@ -22,14 +22,15 @@ This guide is for reviewers who want to quickly understand what the project demo
 
 - The demo favors reliability over live model dependency by defaulting to mock mode.
 - The project validates Bedrock output but does not implement a full evaluation harness.
-- The public demo is unauthenticated because it is mock-only; production use would require authentication, rate limiting, and stricter observability.
+- The public demo is unauthenticated because it is mock-only; per-IP rate limiting is enabled, while production use still needs authentication, request size limits, and data-handling controls.
 
 ## Review Commands
 
 ```bash
 pip install -r requirements-dev.txt
 ruff check .
-python -m unittest discover -s tests
+pytest
+pip-audit --strict --progress-spinner off
 ```
 
 ## Suggested Discussion Topics

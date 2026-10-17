@@ -1,6 +1,6 @@
 # n8n Triage Workflow
 
-A small n8n workflow that closes the loop end to end: a support ticket comes in via webhook, gets triaged by this repo's live `/triage` API, and the result is posted to Slack.
+An importable example for receiving a support ticket by webhook, calling this repo's `/triage` API, and posting the result to Slack. Import and execution in n8n remain unverified; the public API uses canned mock responses.
 
 **Pipeline:** `Webhook → Call Triage API → Format Slack Message → Post to Slack → Respond to Webhook`
 
@@ -23,13 +23,13 @@ curl -X POST https://<your-n8n-instance>/webhook/bedrock-ops-triage \
 
 Accepts either a raw ticket shape (`ticket_id`/`summary`) or the full `IncidentBundle` shape from the main API. The **Call Triage API** node falls back sensibly across common field names (`ticket_id`/`incident_id`, `summary`/`subject`/`description`).
 
-## What I verified vs. what needs your n8n instance
+## Verify in your instance
 
-I don't have access to your n8n instance from this session, so this JSON is hand-authored against n8n's documented node schema, not exported from a live run. Unlike everything else in this roadmap so far, **this one hasn't been click-tested**. Before relying on it:
-- Import it and click **Execute workflow** with the curl payload above; n8n will flag anything it can't parse.
-- If a node shows a version-mismatch warning on import, that's normal. n8n will offer to update it to the installed version.
-- The REST `/triage` endpoint it calls is the same one covered by `tests/test_assistant.py`, so the API side is solid; the n8n side is the untested part.
+The JSON was authored against the node schema and has not been exported from a successful n8n run. Before relying on it:
 
-## Stretch: swap in n8n's native MCP Client Tool node
+1. Import the workflow and resolve any node-version or configuration warnings.
+2. Configure the Slack credential, channel, and API URL.
+3. Use the test webhook with synthetic input and inspect each node's output.
+4. Confirm the Slack message and webhook response before activating the workflow.
 
-n8n has a built-in **MCP Client Tool** node (`n8n-nodes-langchain.mcpClientTool`) that connects to an MCP server's streamable-HTTP endpoint and hands its tools to n8n's agent node. Pointed at `https://aws-bedrock-ops-agent.onrender.com/mcp/`, it would let an n8n agent call `triage_incident` directly instead of going through the plain REST call above. That's a more direct demonstration of the MCP work, but it's a multi-node cluster (agent node, chat model, MCP Client Tool) with its own credential requirements (an LLM credential for the agent node), which is a bigger surface to get right blind. Worth building by hand in the n8n editor once the simpler pipeline above is confirmed working, rather than hand-authoring untested cluster-node JSON here.
+API tests cover the service independently; they do not validate n8n node compatibility, credentials, or Slack delivery.

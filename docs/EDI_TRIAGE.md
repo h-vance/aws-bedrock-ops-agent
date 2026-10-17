@@ -2,7 +2,7 @@
 
 I built this in one weekend after reading the Product Support Engineer posting and Orderful's public docs. It is a domain port of the triage agent in this repo: same prompt shape, same ranked-hypothesis output, pointed at Orderful's documented transaction statuses instead of AWS incidents. The failure cases are invented. They are shaped after the status enums, the AS2 troubleshooting page, and the acknowledgment API example in the docs, not after any real customer data. I have not used the Orderful product. Where I guessed at how an error surfaces, I say so in the fixture's `_note` field.
 
-Planning notes, taxonomy check, and the demo script are in [EDI_TRIAGE_ROADMAP.md](EDI_TRIAGE_ROADMAP.md).
+The dated taxonomy research and fixture assumptions are in [EDI design notes](EDI_DESIGN.md).
 
 ## What it does
 
