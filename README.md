@@ -5,13 +5,7 @@
 [![FastAPI](https://www.shieldcn.dev/badge/FastAPI-009688.svg?variant=default&logo=FastAPI&logoColor=FFFFFF&size=xs)](https://fastapi.tiangolo.com)
 [![Python](https://www.shieldcn.dev/badge/Python-3776AB.svg?variant=default&logo=Python&logoColor=FFFFFF&size=xs)](https://python.org)
 
-> **L2 triage copilot for support engineers: ingests incident evidence bundles and returns hypotheses, checks, and escalation-ready notes, not a general chat assistant.**
-
-Part of the [Ops Support Demo](https://aws-bedrock-ops-agent.onrender.com/) portfolio.
-
-## Overview
-
-A structured triage copilot that consumes incident evidence bundles and returns ranked hypotheses, recommended checks, and escalation documentation. Designed for support engineers who need AI assistance grounded in actual incident data, not open-ended conversation.
+A support-triage demo with synthetic incident and EDI fixtures. It returns ranked hypotheses, diagnostic checks, draft customer replies, and escalation notes. The public demo runs in mock mode; live mode connects to Amazon Bedrock.
 
 ## Features
 
@@ -25,7 +19,7 @@ A structured triage copilot that consumes incident evidence bundles and returns 
 
 - [Architecture](docs/ARCHITECTURE.md) - system boundaries, request flow, modes, and known limits
 - [MCP Server](docs/MCP_SERVER.md) - the `/mcp` tool surface, transport, and how to connect a client
-- [n8n Workflow](docs/N8N_WORKFLOW.md) - webhook → triage → Slack automation, ready to import
+- [n8n Workflow](docs/N8N_WORKFLOW.md) - webhook → triage → Slack example; n8n execution unverified
 - [EDI Failure Triage](docs/EDI_TRIAGE.md) - the same triage pattern pointed at EDI transaction failures, with fixtures and a CLI
 - [Operations Runbook](docs/RUNBOOK.md) - health checks, local/Render operations, failures, and rollback
 - [Security Notes](docs/SECURITY.md) - data handling, access controls, model output safety, and review checklist
@@ -34,8 +28,10 @@ A structured triage copilot that consumes incident evidence bundles and returns 
 ## Quickstart
 
 ```bash
-# Install runtime dependencies
-pip install -r requirements.txt
+# Create an isolated environment (CI uses Python 3.11)
+python3.11 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
 
 # Start with mock mode (no AWS needed)
 BEDROCK_MOCK=true python assistant.py
@@ -132,21 +128,18 @@ The live demo runs on Render's free tier with `BEDROCK_MOCK=true`. No AWS creden
 BEDROCK_MOCK=true python assistant.py
 ```
 
-## CORS
-
-The FastAPI app includes pre-configured `CORSMiddleware` allowing `http://localhost:8080` and `http://127.0.0.1:8080` (the debug console). Set `CORS_ORIGINS` when deploying under a custom domain.
-
 ## Development
 
 ```bash
-pip install -r requirements-dev.txt
+python -m pip install -r requirements-dev.txt
 ruff check .
 pytest
+pip-audit --strict --progress-spinner off
 ```
 
 ## Security
 
-Use least-privilege AWS credentials for live Bedrock mode. Keep the public demo in mock mode unless authentication, rate limiting, and stricter observability are added.
+Use least-privilege AWS credentials for live Bedrock mode. Keep the public demo in mock mode until authentication, request size limits, and data-handling controls are in place. See [Security Notes](docs/SECURITY.md); per-IP rate limiting is already enabled.
 
 ## Related
 

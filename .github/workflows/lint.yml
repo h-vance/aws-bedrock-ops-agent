@@ -37,3 +37,5 @@ jobs:
         run: ruff check .
       - name: Run tests
         run: pytest
+      - name: Audit installed dependencies
+        run: pip-audit --strict --progress-spinner off

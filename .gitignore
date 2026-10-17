@@ -6,6 +6,10 @@ venv/
 .venv/
 env/
 .env
+.env.*
+!.env.example
+.pytest_cache/
+.ruff_cache/
 
 # Terraform
 .terraform/
@@ -22,4 +26,6 @@ lambda_handler.zip
 # Local tooling
 .agents/
 .claude/
+.codex/
+.scratch/
 skills-lock.json
