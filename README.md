@@ -13,7 +13,7 @@ A support-triage demo with synthetic incident and EDI fixtures. It returns ranke
 - **MCP Server:** the same triage logic is exposed as an MCP tool at `/mcp`, so any MCP-aware client (n8n, a custom agent, etc.) can call it directly. See [MCP Server docs](docs/MCP_SERVER.md).
 - **EDI Failure Triage:** `POST /triage/edi` and the `triage_edi_transaction` tool run the same pattern on a failed EDI transaction, using the status model from Orderful's public docs. Built as an interview exercise; see [EDI Triage docs](docs/EDI_TRIAGE.md) for what is real and what is invented.
 - **Mock Mode:** `BEDROCK_MOCK=true` returns deterministic canned responses that work offline with no AWS credentials.
-- **Live Bedrock Mode:** `BEDROCK_MOCK=false` invokes Amazon Bedrock Runtime with validated structured output.
+- **Live Bedrock Mode:** `BEDROCK_MOCK=false` sends selected incident evidence to Amazon Bedrock and validates structured output. See [evidence limits and filtering](docs/SECURITY.md#live-incident-evidence); EDI uses a separate input path.
 
 ## Documentation
 

@@ -5,8 +5,26 @@ This project is a portfolio demo, not a production incident management system. T
 ## Data Handling
 
 - Demo incident bundles are synthetic and embedded in the static console.
-- The app does not persist request payloads or generated responses.
-- Live Bedrock mode sends incident summaries and evidence counts to the configured Bedrock model. Do not use live mode with sensitive data unless the surrounding AWS account controls are production-ready.
+- The app does not store payloads or responses locally. When incident tracing is configured, Langfuse receives the same filtered prompt as Bedrock, the original incident ID as metadata, and the model output or error. Metadata, output, and errors do not pass through the prompt filter.
+- Live incident mode sends the summary and selected evidence to Bedrock as described below. REST and MCP use the same prompt builder.
+- Live EDI mode sends the supplied transaction fields as JSON. The incident evidence filter does not apply to EDI, and EDI calls are not traced with Langfuse.
+
+### Live incident evidence
+
+The prompt includes the first **10 items** of each collection, in submitted order:
+
+| Collection | Included fields |
+|------------|-----------------|
+| Timeline | `ts`, `event`, `trace_id` |
+| Logs | `level`, `message`, `trace_id` |
+| Request samples | `method`, `path`, `status`, `trace_id` |
+| Related endpoints | Path only |
+
+Only scalar field values are included, represented as text. Headers, bodies, nested values, and unknown fields are omitted. Request and endpoint URLs retain only their path, excluding authority/user information, query, and fragment. Malformed URLs that cannot be parsed become `[invalid path]`.
+
+Included values and the incident ID are limited to **500 characters**, and the summary to **2,000 characters**, after filtering. Original collection counts accompany the selected evidence; the prompt warns that evidence may be truncated. These are outbound field limits, not HTTP request-size limits or token budgets. JSON escaping can expand the serialized size.
+
+The text filter replaces Bearer/Basic credentials and common `key=value` or `key: value` assignments (`password`, `passwd`, `api_key`, `token`, access/refresh/id tokens, `secret`, and `client_secret`, including hyphenated forms) with `[REDACTED]`. Quoted values are supported. This is best-effort filtering, not comprehensive secret or personal-data detection: unlabeled credentials, secrets in paths, encoded values, and ordinary personal information can remain. Review and sanitize inputs before live use; keep the public deployment mock-only.
 
 ## Access Controls
 
